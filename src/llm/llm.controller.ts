@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Post } from '@nestjs/common';
 import { LLMService } from 'src/common/langchain/llm.service';
 
 @Controller('llm')

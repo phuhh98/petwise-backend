@@ -1,7 +1,8 @@
 import { ChatPromptTemplate } from '@langchain/core/prompts';
+
 import { geoLocationSystemPrompt } from './messageComponents/geolocationSystemPrompt';
-import { userQuestionPrompt } from './messageComponents/userQuestionPrompt';
 import { travelAssistantSystemPrompt } from './messageComponents/travelAssistantSystemPrompt';
+import { userQuestionPrompt } from './messageComponents/userQuestionPrompt';
 
 export const geolocationPrompt = ChatPromptTemplate.fromMessages<{
   question: string;

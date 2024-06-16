@@ -4,40 +4,34 @@ import {
 } from '@google/generative-ai';
 
 export const geolocationParser: FunctionDeclaration = {
-  description: 'Parse geolocation information into json object format',
+  description: 'Parse geolocation from provided context into json format',
   name: 'geolocationParser',
   parameters: {
+    description:
+      'geolocation object which contains cordinates and name of the place',
     properties: {
-      geolocation: {
-        description:
-          'contain geolocation of a place contain cordinates and name of the place',
-        properties: {
-          ISO_A3: {
-            description:
-              'A3 ISO code of the country that this place belonged to',
-            properties: {},
-            type: FunctionDeclarationSchemaType.STRING,
-          },
-          lat: {
-            description: 'latitude value',
-            properties: {},
-            type: FunctionDeclarationSchemaType.NUMBER,
-          },
-          lng: {
-            description: 'longitude value',
-            properties: {},
-            type: FunctionDeclarationSchemaType.NUMBER,
-          },
-          place_name: {
-            description: 'the place name',
-            properties: {},
-            type: FunctionDeclarationSchemaType.STRING,
-          },
-        },
-        type: FunctionDeclarationSchemaType.OBJECT,
+      ISO_A3: {
+        description: 'A3 ISO code of the country that this place belonged to',
+        properties: {},
+        type: FunctionDeclarationSchemaType.STRING,
+      },
+      lat: {
+        description: 'latitude value',
+        properties: {},
+        type: FunctionDeclarationSchemaType.NUMBER,
+      },
+      lng: {
+        description: 'longitude value',
+        properties: {},
+        type: FunctionDeclarationSchemaType.NUMBER,
+      },
+      place_name: {
+        description: 'the place name',
+        properties: {},
+        type: FunctionDeclarationSchemaType.STRING,
       },
     },
-    required: ['geolocation'],
+    required: ['ISO_A3', 'lat', 'lng', 'place_name'],
     type: FunctionDeclarationSchemaType.OBJECT,
   },
 };
