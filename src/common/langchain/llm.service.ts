@@ -41,7 +41,7 @@ export class LLMService {
         tools: [{ functionDeclarations: [generalAnswerParser] }],
       }),
     )
-    .pipe(new StringOutputParser());
+    .pipe(new GoogleCustomJSONOutputParser());
 
   private master = RunnableMap.from<
     | Parameters<typeof this._geolocationChain.invoke>[0]
