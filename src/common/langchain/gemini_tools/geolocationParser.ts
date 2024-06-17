@@ -37,10 +37,8 @@ export const geolocationParser: FunctionDeclaration = {
 };
 
 export type GeolocationResponse = {
-  geolocation: {
-    ISO_A3: string;
-    lat: number;
-    lng: number;
-    place_name: string;
-  };
+  ISO_A3: string;
+  lat: number;
+  lng: number;
+  place_name: string;
 };

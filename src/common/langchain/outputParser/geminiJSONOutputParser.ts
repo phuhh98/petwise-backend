@@ -1,6 +1,5 @@
 import { ChatGeneration, Generation } from '@langchain/core/outputs';
 import { JsonOutputFunctionsParser } from 'langchain/output_parsers';
-import { inspect } from 'util';
 
 export class GoogleCustomJSONOutputParser extends JsonOutputFunctionsParser {
   constructor(
@@ -14,7 +13,10 @@ export class GoogleCustomJSONOutputParser extends JsonOutputFunctionsParser {
   }
   parseResult(generations: ChatGeneration[] | Generation[]): Promise<object> {
     const gen = generations[0];
-    const jsonData = (gen as any).message?.tool_calls[0].args;
+    const tool_calls = (
+      (gen as any).message?.tool_calls as Record<string, any>[]
+    ).reverse();
+    const jsonData = tool_calls[0].args;
     return jsonData ?? {};
   }
 }

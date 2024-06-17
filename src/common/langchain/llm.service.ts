@@ -4,21 +4,24 @@ import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
-import {
-  // GeneralAnswerResponse,
-  generalAnswerParser,
-} from './gemini_tools/generalAnswerExtractor';
-import {
-  // GeolocationResponse,
-  geolocationParser,
-} from './gemini_tools/geolocationParser';
+import { generalAnswerParser } from './gemini_tools/generalAnswerExtractor';
+import { geolocationParser } from './gemini_tools/geolocationParser';
+import { petProfileJsonParser } from './gemini_tools/petProfileJsonParser';
 import { GoogleCustomJSONOutputParser } from './outputParser/geminiJSONOutputParser';
-import { geolocationPrompt, travelAssistantPrompt } from './prompts';
+import {
+  geolocationPrompt,
+  petProfileBuilderPrompt,
+  travelAssistantPrompt,
+} from './prompts';
+import { petProfilebuilderUserMessage } from './prompts/messageComponents/petProfileBuilderPrompts';
 
 @Injectable()
 export class LLMService {
   private _geminiModel = new ChatGoogleGenerativeAI({
-    apiKey: this.configService.get('GEMINI_API_KEY'),
+    apiKey:
+      this.configService.get<NodeJS.ProcessEnv['GEMINI_API_KEY']>(
+        'GEMINI_API_KEY',
+      ),
     maxOutputTokens: 2048,
     model: 'gemini-1.5-flash-latest',
     // verbose: true,
@@ -58,5 +61,25 @@ export class LLMService {
 
   async geolocationPrompt(question: string) {
     return await this.master.invoke({ question });
+  }
+
+  async petProfileBuilderPrompt({
+    fileUri,
+    mimeType,
+  }: {
+    fileUri: string;
+    mimeType: string;
+  }) {
+    const petProfileBuilderChain = petProfileBuilderPrompt
+      .pipe(
+        this._geminiModel.bind({
+          tools: [{ functionDeclarations: [petProfileJsonParser] }],
+        }),
+      )
+      .pipe(new GoogleCustomJSONOutputParser());
+
+    return await petProfileBuilderChain.invoke({
+      message: petProfilebuilderUserMessage({ fileUri, mimeType }),
+    });
   }
 }

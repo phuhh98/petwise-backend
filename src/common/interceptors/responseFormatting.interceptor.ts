@@ -1,8 +1,8 @@
 import {
+  CallHandler,
+  ExecutionContext,
   Injectable,
   NestInterceptor,
-  ExecutionContext,
-  CallHandler,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { Observable } from 'rxjs';
@@ -22,8 +22,8 @@ export class ResponseFormattingInterceptor<T>
   ): Observable<CustomReturnResponse<T>> {
     return next.handle().pipe(
       map((data) => ({
-        status: context.switchToHttp().getResponse<Response>().statusCode,
         data,
+        status: context.switchToHttp().getResponse<Response>().statusCode,
       })),
     );
   }
