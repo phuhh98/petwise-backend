@@ -13,7 +13,6 @@ export class GoogleCustomJSONOutputParser extends JsonOutputFunctionsParser {
     return 'GoogleCustomJSONOutputParser';
   }
   parseResult(generations: ChatGeneration[] | Generation[]): Promise<object> {
-    console.log('generations', inspect(generations[0], false, 4));
     const gen = generations[0];
     const jsonData = (gen as any).message?.tool_calls[0].args;
     return jsonData ?? {};

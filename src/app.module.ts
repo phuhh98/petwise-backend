@@ -4,6 +4,8 @@ import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { LLMModule } from './llm/llm.module';
+import { APP_INTERCEPTOR } from '@nestjs/core';
+import { ResponseFormattingInterceptor } from './common/interceptors/responseFormatting.interceptor';
 
 @Module({
   controllers: [AppController],
@@ -14,6 +16,12 @@ import { LLMModule } from './llm/llm.module';
     }),
     LLMModule,
   ],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: ResponseFormattingInterceptor,
+    },
+  ],
 })
 export class AppModule {}
