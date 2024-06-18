@@ -95,7 +95,7 @@ export class LLMController {
 
       this.googleFileService.deleteFile(fileUploadResult.file.name);
 
-      return { analysis: promptRes };
+      return promptRes;
     } finally {
       await fs.rm(TEMP_FILE_PATH);
     }
@@ -110,9 +110,9 @@ export class LLMController {
         validators: [
           new MaxFileSizeValidator({
             /**
-             * 20MB in bytes
+             * 100MB in bytes
              */
-            maxSize: 20 * 1024 * 1024,
+            maxSize: 100 * 1024 * 1024,
           }),
           /**
            * Google File API supported formats for videos
@@ -170,7 +170,7 @@ export class LLMController {
 
       this.googleFileService.deleteFile(fileUploadResult.file.name);
 
-      return promptRes;
+      return { analysis: promptRes };
     } finally {
       await fs.rm(TEMP_FILE_PATH);
     }

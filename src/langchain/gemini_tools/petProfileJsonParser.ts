@@ -57,6 +57,11 @@ export const petProfileJsonParser: FunctionDeclaration = {
         properties: {},
         type: FunctionDeclarationSchemaType.STRING,
       },
+      type: {
+        description: 'type of pet - animal type',
+        properties: {},
+        type: FunctionDeclarationSchemaType.STRING,
+      },
       description: {
         description: 'A brief description of the pet breed',
         properties: {},
@@ -232,6 +237,7 @@ export type petProfileRepsonse = {
     };
   };
   breed: string;
+  type: string;
   description: string;
   error: null | string;
 };

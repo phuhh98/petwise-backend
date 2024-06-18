@@ -15,6 +15,7 @@ export const petProfileBuilderSystemPrompt =
         + Assess this pet healthiness compare to its breed info
 
     Those info must be populate in the following fields, each field has values or a short descriptions in 1 sentence:
+        type: type of pet - animal type
         breed: the pet breed
         description: A brief description of the pet breed
         appearance:
