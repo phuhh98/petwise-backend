@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { GooleAIFileServiceWrapper } from 'src/common/googleServices/googleFileUpload.service';
-import { LLMService } from 'src/common/langchain/llm.service';
+import { GooleAIFileServiceWrapper } from 'src/langchain/googleServices/googleFileUpload.service';
+import { LLMService } from 'src/langchain/llm.service';
 
 import { LLMController } from './llm.controller';
 

@@ -233,4 +233,5 @@ export type petProfileRepsonse = {
   };
   breed: string;
   description: string;
+  error: null | string;
 };

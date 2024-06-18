@@ -71,3 +71,32 @@ Nest is an MIT-licensed open source project. It can grow thanks to the sponsors 
 ## License
 
 Nest is [MIT licensed](LICENSE).
+
+---
+
+# Project notes
+
+This project requires some change in library to support multi model with Google File API
+Make sure to add these line in **node_modules/@langchain/google-genai/dist/util/common.cjs** and **node_modules/@langchain/google-genai/dist/util/common.cjs** at **messageContentMedia** function
+
+```javascript
+function messageContentMedia(content) {
+  if ('mimeType' in content && 'data' in content) {
+    return {
+      inlineData: {
+        mimeType: content.mimeType,
+        data: content.data,
+      },
+    };
+  }
+  if ('mimeType' in content && 'fileUri' in content) {
+    return {
+      fileData: {
+        mimeType: content.mimeType,
+        fileUri: content.fileUri,
+      },
+    };
+  }
+  throw new Error('Invalid media content');
+}
+```

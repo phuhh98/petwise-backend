@@ -5,6 +5,7 @@ import {
 } from '@langchain/core/prompts';
 
 import { geoLocationSystemPrompt } from './messageComponents/geolocationSystemPrompt';
+import { petDiaryBuilderSystemPrompt } from './messageComponents/petDiaryBuilderPrompts';
 import { petProfileBuilderSystemPrompt } from './messageComponents/petProfileBuilderPrompts';
 import { travelAssistantSystemPrompt } from './messageComponents/travelAssistantSystemPrompt';
 import { userQuestionPrompt } from './messageComponents/userQuestionPrompt';
@@ -20,3 +21,8 @@ export const travelAssistantPrompt = ChatPromptTemplate.fromMessages<{
 export const petProfileBuilderPrompt = ChatPromptTemplate.fromMessages<{
   message: HumanMessage;
 }>([petProfileBuilderSystemPrompt, new MessagesPlaceholder('message')]);
+
+export const petDiaryBuilderPrompt = ChatPromptTemplate.fromMessages<{
+  message: HumanMessage;
+  pet_profile?: string;
+}>([petDiaryBuilderSystemPrompt, new MessagesPlaceholder('message')]);

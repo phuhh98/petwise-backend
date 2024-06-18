@@ -49,7 +49,7 @@ export const petProfileBuilderSystemPrompt =
       
 `);
 
-export const petProfilebuilderUserMessage = ({
+export const petProfilebuilderHumanMessage = ({
   fileUri,
   mimeType,
 }: {
