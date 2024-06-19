@@ -15,6 +15,7 @@ import {
   travelAssistantPrompt,
 } from './prompts';
 import { petProfilebuilderHumanMessage } from './prompts/messageComponents/petProfileBuilderPrompts';
+import { StringOutputParser } from '@langchain/core/output_parsers';
 
 @Injectable()
 export class LLMService {
@@ -42,23 +43,19 @@ export class LLMService {
       .pipe(new GoogleCustomJSONOutputParser());
 
     const travelAssitantChain = travelAssistantPrompt
-      .pipe(
-        this.geminiModel.bind({
-          tools: [{ functionDeclarations: [generalAnswerParser] }],
-        }),
-      )
-      .pipe(new GoogleCustomJSONOutputParser());
+      .pipe(this.geminiModel)
+      .pipe(new StringOutputParser());
 
     const master = RunnableMap.from<
       | Parameters<typeof geolocationChain.invoke>[0]
       | Parameters<typeof travelAssitantChain.invoke>[0],
       {
         location: Awaited<ReturnType<typeof this.geolocationChain.invoke>>;
-        message: Awaited<ReturnType<typeof this.travelAssitantChain.invoke>>;
+        answer: Awaited<ReturnType<typeof this.travelAssitantChain.invoke>>;
       }
     >({
       location: geolocationChain,
-      message: travelAssitantChain,
+      answer: travelAssitantChain,
     });
 
     return await master.invoke({ question });

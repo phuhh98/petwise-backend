@@ -1,0 +1,5 @@
+export enum ProviderTokens {
+  'ERROR_VALIDATOR' = 'ERROR_VALIDATOR',
+  'FIRESTORE' = 'FIRESTORE',
+  'FIREBASE_AUTH' = 'FIREBASE_AUTH',
+}

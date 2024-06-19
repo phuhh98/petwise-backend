@@ -100,3 +100,7 @@ function messageContentMedia(content) {
   throw new Error('Invalid media content');
 }
 ```
+
+### Firebase
+
+Put firebase service account key json file under **src/firebase** folder with name firbase.keys.json

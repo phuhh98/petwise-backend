@@ -5,6 +5,7 @@ import {
   FileTypeValidator,
   HttpCode,
   HttpStatus,
+  Inject,
   MaxFileSizeValidator,
   ParseFilePipe,
   Post,
@@ -16,6 +17,7 @@ import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import { GooleAIFileServiceWrapper } from 'src/langchain/googleServices/googleFileUpload.service';
 import { LLMService } from 'src/langchain/llm.service';
+import { ControllerReturn } from 'src/types/nest-controller-return-format.types';
 import { v4 as uuidv4 } from 'uuid';
 
 @Controller('llm')
@@ -27,8 +29,13 @@ export class LLMController {
 
   @Post('travel-assistant')
   @HttpCode(HttpStatus.OK)
-  async genericPrompt(@Body() data: { question: string }) {
-    return await this.llmService.geolocation(data.question);
+  async genericPrompt(
+    @Body() data: { question: string },
+  ): Promise<ControllerReturn.LLMCompletedMessage> {
+    return {
+      data: await this.llmService.geolocation(data.question),
+      message: 'Generation succeed',
+    };
   }
 
   @Post('pet-profile-builder')
@@ -55,7 +62,7 @@ export class LLMController {
       }),
     )
     file: Express.Multer.File,
-  ) {
+  ): Promise<ControllerReturn.LLMCompletedMessage> {
     /**
      * File temporary store is out side of try block
      */
@@ -95,7 +102,7 @@ export class LLMController {
 
       this.googleFileService.deleteFile(fileUploadResult.file.name);
 
-      return promptRes;
+      return { data: promptRes, message: 'Generation succeed' };
     } finally {
       await fs.rm(TEMP_FILE_PATH);
     }
@@ -125,7 +132,7 @@ export class LLMController {
       }),
     )
     file: Express.Multer.File,
-  ) {
+  ): Promise<ControllerReturn.LLMCompletedMessage> {
     /**
      * File temporary store is out side of try block
      */
@@ -170,7 +177,7 @@ export class LLMController {
 
       this.googleFileService.deleteFile(fileUploadResult.file.name);
 
-      return { analysis: promptRes };
+      return { data: { analysis: promptRes }, message: 'Generation succeed' };
     } finally {
       await fs.rm(TEMP_FILE_PATH);
     }
