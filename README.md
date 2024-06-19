@@ -104,3 +104,7 @@ function messageContentMedia(content) {
 ### Firebase
 
 Put firebase service account key json file under **src/firebase** folder with name firbase.keys.json
+
+### Api document
+
+Api documentation is facilitated by Swagger UI and can be visit at endpoint **/api-docs**
