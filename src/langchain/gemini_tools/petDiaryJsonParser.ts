@@ -57,14 +57,3 @@ export const petDiaryJsonParser: FunctionDeclaration = {
     type: FunctionDeclarationSchemaType.OBJECT,
   },
 };
-
-export type petDiaryAnalysisRepsonse = {
-  actions: string[];
-  advice: string;
-  emotions: {
-    description: string;
-    primary_emotion: string;
-    secondary_emotions: string[];
-  };
-  error: null | string;
-};

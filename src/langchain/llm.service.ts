@@ -3,7 +3,6 @@ import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
-import { generalAnswerParser } from './gemini_tools/generalAnswerExtractor';
 import { geolocationParser } from './gemini_tools/geolocationParser';
 import { petDiaryJsonParser } from './gemini_tools/petDiaryJsonParser';
 import { petProfileJsonParser } from './gemini_tools/petProfileJsonParser';
@@ -25,7 +24,7 @@ export class LLMService {
         'GEMINI_API_KEY',
       ),
     maxOutputTokens: 2048,
-    model: 'gemini-1.5-flash-latest',
+    model: 'gemini-1.5-flash',
     // verbose: true,
   });
 

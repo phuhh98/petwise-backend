@@ -19,19 +19,19 @@ export const petProfileBuilderSystemPrompt =
         breed: the pet breed
         description: A brief description of the pet breed
         appearance:
-            size: Size of the pet, coulbe Small, Medium, Large..etc
-            coat:
-                type: pet appearance, related to its fur or skin
-                colors: the pet color from the image           
-        head:
-            shape: Shape of the pet head
-            ears: Ear shape description
-            eyes: Eye shape and color
-            nose: Nose description
-        body:
-            build: body build, eg Sturdy
-            tail: tail size, shape, and furry state
-        legs: size of its legs, could be strong or weak
+          size: Size of the pet, coulbe Small, Medium, Large..etc
+          coat:
+              type: pet appearance, related to its fur or skin
+              colors: the pet color from the image           
+          head:
+              shape: Shape of the pet head
+              ears: Ear shape description
+              eyes: Eye shape and color
+              nose: Nose description
+          body:
+              build: body build, eg Sturdy
+              tail: tail size, shape, and furry state
+          legs: size of its legs, could be strong or weak
         temperament:
             personality: the breed general personality
             energy_level: daily energy or mood

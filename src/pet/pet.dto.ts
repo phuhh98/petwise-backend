@@ -1,13 +1,7 @@
-import {
-  IsDataURI,
-  IsObject,
-  IsOptional,
-  IsString,
-  IsUrl,
-  ValidateNested,
-} from 'class-validator';
+import { IsOptional, IsString, IsUrl, ValidateNested } from 'class-validator';
 import { Pet, PetProfileNS } from 'src/types/pet.type';
 import { Type } from 'class-transformer';
+import { OmitType, PartialType } from '@nestjs/swagger';
 
 namespace PetProfileDtoNS {
   class PetCoatingDto implements PetProfileNS.PetCoating {
@@ -24,9 +18,6 @@ namespace PetProfileDtoNS {
 
     @IsString()
     eyes: string;
-
-    @IsString()
-    legs: string;
 
     @IsString()
     nose: string;
@@ -111,23 +102,23 @@ namespace PetProfileDtoNS {
     description: string;
 
     @ValidateNested()
-    @Type(() => PetAppearanceDto)
+    @Type(() => PartialType(PetAppearanceDto))
     appearance: PetAppearanceDto;
 
     @ValidateNested()
-    @Type(() => PetTemperamentDto)
+    @Type(() => PartialType(PetTemperamentDto))
     temperament: PetTemperamentDto;
 
     @ValidateNested()
-    @Type(() => PetHealthDto)
+    @Type(() => PartialType(PetHealthDto))
     health: PetHealthDto;
 
     @ValidateNested()
-    @Type(() => PetGroomingDto)
+    @Type(() => PartialType(PetGroomingDto))
     grooming: PetGroomingDto;
 
     @ValidateNested()
-    @Type(() => PetExerciseDto)
+    @Type(() => PartialType(PetExerciseDto))
     exercise: PetExerciseDto;
   }
 }
@@ -146,28 +137,12 @@ export class CreatePetDto implements Pet {
 
   @IsOptional()
   @ValidateNested()
-  @Type(() => PetProfileDtoNS.PetProfileDto)
+  @Type(() => PartialType(PetProfileDtoNS.PetProfileDto))
   profile: PetProfileDtoNS.PetProfileDto;
 
   user_id: string;
 }
 
-export class UpdatePetDto implements Omit<Pet, 'user_id'> {
-  @IsString()
-  @IsOptional()
-  name: string;
-
-  @IsOptional()
-  @IsString()
-  bio: string;
-
-  @IsOptional()
-  @IsDataURI()
-  avatar: string;
-
-  // @IsOptional()
-  // @IsObject()
-  @ValidateNested()
-  @Type(() => PetProfileDtoNS.PetProfileDto)
-  profile: PetProfileDtoNS.PetProfileDto;
-}
+export class UpdatePetDto extends PartialType(
+  OmitType(CreatePetDto, ['user_id']),
+) {}
