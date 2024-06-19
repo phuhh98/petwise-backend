@@ -34,7 +34,7 @@ import { FirebaseAuthService } from './common/services/firebase/firebase-auth.se
       useClass: TypeGuards,
     },
     {
-      provide: ProviderTokens['FIRESTORE'],
+      provide: FirestoreService,
       useClass: FirestoreService,
     },
     {
@@ -47,7 +47,7 @@ import { FirebaseAuthService } from './common/services/firebase/firebase-auth.se
     },
   ],
   exports: [
-    ProviderTokens['FIRESTORE'],
+    FirestoreService,
     ProviderTokens['FIREBASE_AUTH'],
     ProviderTokens['TYPE_GUARDS'],
     ProviderTokens['CONFIG_SERVICE'],

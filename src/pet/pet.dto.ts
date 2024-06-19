@@ -124,23 +124,25 @@ namespace PetProfileDtoNS {
 }
 
 export class CreatePetDto implements Pet {
+  id: string;
+
+  user_id: string;
+
   @IsString()
   name: string;
 
   @IsOptional()
   @IsString()
-  bio: string;
+  bio?: string;
 
   @IsOptional()
   @IsUrl()
-  avatar: string;
+  avatar?: string;
 
   @IsOptional()
   @ValidateNested()
   @Type(() => PartialType(PetProfileDtoNS.PetProfileDto))
-  profile: PetProfileDtoNS.PetProfileDto;
-
-  user_id: string;
+  profile?: PetProfileDtoNS.PetProfileDto;
 }
 
 export class UpdatePetDto extends PartialType(

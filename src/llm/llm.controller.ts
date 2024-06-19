@@ -20,6 +20,7 @@ import { GooleAIFileServiceWrapper } from 'src/llm/langchain/googleServices/goog
 import { LLMService } from 'src/llm/llm.service';
 import { ControllerReturn } from 'src/types/nest-controller-return-format.types';
 import { v4 as uuidv4 } from 'uuid';
+import { TravelAssitantDto } from './llm.dto';
 
 @Controller('llm')
 @UseGuards(FirebaseAuthenticationGuard)
@@ -32,7 +33,7 @@ export class LLMController {
   @Post('travel-assistant')
   @HttpCode(HttpStatus.OK)
   async genericPrompt(
-    @Body() data: { question: string },
+    @Body() data: TravelAssitantDto,
   ): Promise<ControllerReturn.LLMCompletedMessage> {
     return {
       data: await this.llmService.geolocation(data.question),

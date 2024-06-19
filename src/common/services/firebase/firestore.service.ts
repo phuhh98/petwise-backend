@@ -1,12 +1,16 @@
 import { Injectable } from '@nestjs/common';
-import { getFirestore } from 'firebase-admin/firestore';
+import { CollectionReference, getFirestore } from 'firebase-admin/firestore';
 import app from '../../configs/firebase.config';
 
 @Injectable()
 export class FirestoreService {
   private db = getFirestore(app);
 
-  getFirestoreCollection(collectionName: string) {
-    return this.db.collection(collectionName);
+  getFirestoreCollection<T = unknown>(collectionName: string) {
+    return this.db.collection(collectionName) as CollectionReference<T>;
+  }
+
+  get fireStore() {
+    return this.db;
   }
 }

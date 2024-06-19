@@ -1,104 +1,52 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { FirestoreService } from 'src/common/services/firebase/firestore.service';
-import { CreatePetDto, UpdatePetDto } from './pet.dto';
+import { Injectable } from '@nestjs/common';
+import { BaseServiceAbstract } from 'src/common/services/base/base.abstract.service';
 import { Pet, PetId } from 'src/types/pet.type';
-import { ProviderTokens } from 'src/common/constants/provider-token.constant';
+import { FindAllResponse } from 'src/types/common.type';
+import { PetRepository } from './pet.repository';
+import { BaseRepositoryInterface } from 'src/common/repositories/base/base.interface.repository';
 
 @Injectable()
-export class PetService {
-  @Inject(ProviderTokens['FIRESTORE'])
-  private readonly fireStoreService: FirestoreService;
-  private readonly collectionName = 'pet';
+export class PetService extends BaseServiceAbstract<Pet & PetId> {
+  constructor(
+    private readonly petRepository: PetRepository,
+    // private readonly user_roles_service: UserRolesService,
+  ) {
+    super(petRepository);
+  }
 
-  private petCollectionSingleton: ReturnType<
-    typeof this.fireStoreService.getFirestoreCollection
-  >;
-
-  get collection() {
-    if (!this.petCollectionSingleton) {
-      this.petCollectionSingleton =
-        this.fireStoreService.getFirestoreCollection(this.collectionName);
-    }
-    return this.petCollectionSingleton;
+  async create(create_dto: (Pet & PetId) | any): Promise<Pet & PetId> {
+    return await this.petRepository.create(create_dto);
   }
 
   /**
-   * create a new record for pet
-   * @param createPetDto
-   * @returns Pet & PetId or null
+   * Throw Error on Not Found entity
+   * @param id
+   * @returns
+   *
    */
-  async createPet(createPetDto: CreatePetDto): Promise<(Pet & PetId) | Error> {
-    const docRef = await this.collection.add(createPetDto);
-    const createdPetData = (await docRef.get()).data();
-    if (createdPetData) {
-      return {
-        ...(createdPetData as Pet),
-        pet_id: docRef.id,
-      };
-    }
-
-    return new Error(`Error durinng create pet`);
+  async findOne(id: string): Promise<Pet & PetId> {
+    return await this.petRepository.findOneById(id);
   }
 
-  /**
-   * Get pet data from firestore
-   * @param pet_id
-   * @returns Pet & PetId or null
-   */
-  async getPet(pet_id: string): Promise<(Pet & PetId) | Error> {
-    const docRef = this.collection.doc(pet_id);
-    const petData = (await docRef.get()).data();
-    if (!!petData) {
-      return { ...(petData as Pet), pet_id: docRef.id };
-    }
-    return new Error(`Can not find pet with pet_id ${pet_id}`);
+  async remove(id: string): Promise<boolean> {
+    return await this.petRepository.permanentlyDelete(id);
   }
 
-  async deletePet(pet_id: string): Promise<true> {
-    const docRef = this.collection.doc(pet_id);
-    await docRef.delete();
-    return true;
+  async findAll(
+    filter: Parameters<BaseRepositoryInterface<Pet & PetId>['findAll']>[0],
+    options?: Parameters<BaseRepositoryInterface<Pet & PetId>['findAll']>[1],
+  ): Promise<FindAllResponse<Pet & PetId>> {
+    return await this.petRepository.findAll(filter, options);
   }
 
-  /**
-   * Return a list of pets of user_id
-   * @param user_id
-   * @returns (Pet & PetId)[]
-   */
-
-  async listPets(user_id: string): Promise<(Pet & PetId)[]> {
-    const querySnapshot = await this.collection
-      .where('user_id', '==', user_id)
-      .get();
-
-    if (!querySnapshot.size) {
-      return [];
-    }
-
-    const pets = querySnapshot.docs.map((doc) => ({
-      ...(doc.data() as Pet),
-      pet_id: doc.id,
-    }));
-
-    return pets;
+  async update(
+    id: string,
+    update_dto: Partial<Pet & PetId>,
+  ): Promise<Pet & PetId> {
+    return await this.petRepository.update(id, update_dto);
   }
 
-  async updatePet(
-    pet_id: string,
-    updatePetDto: UpdatePetDto,
-  ): Promise<(Pet & PetId) | Error> {
-    const docRef = this.collection.doc(pet_id);
-
-    await docRef.update({ ...updatePetDto });
-
-    const updatedData = (await docRef.get()).data();
-    if (updatedData) {
-      return {
-        ...(updatedData as Pet),
-        pet_id: docRef.id,
-      };
-    }
-
-    return new Error(`Error during update pet_id ${pet_id}`);
+  async listPet(user_id: string) {
+    return this.petRepository.listPetByUserId(user_id);
   }
 }

@@ -4,8 +4,6 @@ import {
   Delete,
   Get,
   Inject,
-  InternalServerErrorException,
-  NotFoundException,
   Param,
   Patch,
   Post,
@@ -16,8 +14,8 @@ import { CreatePetDto, UpdatePetDto } from './pet.dto';
 import { PetService } from './pet.service';
 import { FirebaseAuthenticationGuard } from 'src/common/guards/firebase-authentication.guard';
 import { ResLocals } from 'src/types/express.types';
-import { ControllerReturn } from 'src/types/nest-controller-return-format.types';
-import { Pet, PetId } from 'src/types/pet.type';
+// import { ControllerReturn } from 'src/types/nest-controller-return-format.types';
+// import { Pet, PetId } from 'src/types/pet.type';
 import { ProviderTokens } from 'src/common/constants/provider-token.constant';
 import { TypeGuards } from 'src/common/services/type-guards.service';
 import { PetOwnershipGuard } from './pet-ownership.guard';
@@ -34,10 +32,10 @@ export class PetController {
   async listPet(
     @Res({ passthrough: true })
     response: ResLocals.FirebaseAuthenticatedRequest,
-  ): Promise<ControllerReturn.CrudCompletedMessage<(Pet & PetId)[]>> {
+  ) /*: Promise<ControllerReturn.CrudCompletedMessage<(Pet & PetId)[]>>*/ {
     const user_id = response.locals.user_id;
 
-    const pets = await this.petService.listPets(user_id);
+    const pets = await this.petService.listPet(user_id);
 
     return {
       message: 'List pets succeed',
@@ -51,19 +49,15 @@ export class PetController {
     createPetDto: CreatePetDto,
     @Res({ passthrough: true })
     response: ResLocals.FirebaseAuthenticatedRequest,
-  ): Promise<ControllerReturn.CrudCompletedMessage<Pet & PetId>> {
+  ) /*: Promise<ControllerReturn.CrudCompletedMessage<Pet & PetId>> */ {
     const user_id = response.locals.user_id;
     createPetDto.user_id = user_id;
 
-    const createdPetData = await this.petService.createPet(createPetDto);
-
-    if (this.typeGuards.isError(createdPetData)) {
-      throw new InternalServerErrorException(createdPetData.message);
-    }
+    const pet = await this.petService.create(createPetDto);
 
     return {
       message: 'Create pet succeed',
-      pet: createdPetData,
+      pet,
     };
   }
 
@@ -71,16 +65,12 @@ export class PetController {
   @Get(':pet_id')
   async getPet(
     @Param('pet_id') pet_id: string,
-  ): Promise<ControllerReturn.CrudCompletedMessage<Pet & PetId>> {
-    const petData = await this.petService.getPet(pet_id);
-
-    if (this.typeGuards.isError(petData)) {
-      throw new NotFoundException(petData.message);
-    }
+  ) /*: Promise<ControllerReturn.CrudCompletedMessage<Pet & PetId>> */ {
+    const pet = await this.petService.findOne(pet_id);
 
     return {
       message: 'Get pet succeed',
-      pet: petData,
+      pet,
     };
   }
 
@@ -91,11 +81,7 @@ export class PetController {
     @Body()
     updatePetDto: UpdatePetDto,
   ) {
-    const updatedData = await this.petService.updatePet(pet_id, updatePetDto);
-
-    if (this.typeGuards.isError(updatedData)) {
-      throw new InternalServerErrorException(updatedData.message);
-    }
+    const updatedData = await this.petService.update(pet_id, updatePetDto);
 
     return {
       message: 'Update pet succeed',
@@ -106,7 +92,7 @@ export class PetController {
   @UseGuards(PetOwnershipGuard)
   @Delete(':pet_id')
   async deletePet(@Param('pet_id') pet_id: string) {
-    await this.petService.deletePet(pet_id);
+    await this.petService.remove(pet_id);
 
     return {
       message: `Delete pet_id ${pet_id} succeed`,

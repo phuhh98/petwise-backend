@@ -1,10 +1,10 @@
 export namespace ControllerReturn {
-  export interface CrudCompletedMessage<T extends unknown = {}> {
+  export interface CrudCompletedMessage<T extends object> {
     [key: string]: string | T;
     message: string;
   }
 
-  export interface LLMCompletedMessage<T extends unknown = {}> {
+  export interface LLMCompletedMessage<T extends object> {
     message: string;
     data: string | T;
   }

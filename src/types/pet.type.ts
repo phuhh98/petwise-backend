@@ -7,7 +7,7 @@ export interface Pet {
 }
 
 export interface PetId {
-  pet_id: string;
+  id: string;
 }
 
 export namespace PetProfileNS {
