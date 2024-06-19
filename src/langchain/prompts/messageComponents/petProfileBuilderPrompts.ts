@@ -34,18 +34,18 @@ export const petProfileBuilderSystemPrompt =
         legs: size of its legs, could be strong or weak
         temperament:
             personality: the breed general personality
-            energyLevel: daily energy or mood
+            energy_level: daily energy or mood
             trainability: possibility to train
-            barkingTendency: would it be easily barking
+            barking_tendency: would it be easily barking
         health:
             lifespan: the breed general life span, could an exact year or approximate years
-            commonHealthIssues: common health issue with this breed
+            common_health_issues: common health issue with this breed
         grooming:
             frequency: frequency to take care of the pet, eg Weekly brushing
             bathing: how often should the owner let the pet takes a bath, eg As needed
         exercise:
             needs: Suggest activity to make the pet happy, eg Daily walks and playtime
-            suitableFor: Suggest kind owners to have this pet breed, eg Active families, experienced dog owners
+            suitable_for: Suggest kind owners to have this pet breed, eg Active families, experienced dog owners
         error: Error message when the image is out of scope of this prompt. Only populate this field when there is error, if not let it be null
       
 `);

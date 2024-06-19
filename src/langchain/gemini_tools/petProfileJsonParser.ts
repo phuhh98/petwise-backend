@@ -82,7 +82,7 @@ export const petProfileJsonParser: FunctionDeclaration = {
             properties: {},
             type: FunctionDeclarationSchemaType.STRING,
           },
-          suitableFor: {
+          suitable_for: {
             description: 'Suggest kind owners to have this pet breed',
             properties: {},
             type: FunctionDeclarationSchemaType.STRING,
@@ -136,7 +136,7 @@ export const petProfileJsonParser: FunctionDeclaration = {
       health: {
         description: "common breed's health info",
         properties: {
-          commonHealthIssues: {
+          common_health_issues: {
             description: 'common health issue with this breed',
             properties: {},
             type: FunctionDeclarationSchemaType.STRING,
@@ -158,12 +158,12 @@ export const petProfileJsonParser: FunctionDeclaration = {
       temperament: {
         description: "pet's personalities",
         properties: {
-          barkingTendency: {
+          barking_tendency: {
             description: 'would it be easily barking',
             properties: {},
             type: FunctionDeclarationSchemaType.STRING,
           },
-          energyLevel: {
+          energy_level: {
             description: 'daily energy or mood',
             properties: {},
             type: FunctionDeclarationSchemaType.STRING,
