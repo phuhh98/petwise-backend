@@ -1,18 +1,25 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { FirestoreService } from 'src/firebase/firestore.service';
+import { FirestoreService } from 'src/common/services/firebase/firestore.service';
 import { CreatePetDto, UpdatePetDto } from './pet.dto';
 import { Pet, PetId } from 'src/types/pet.type';
-import { ProviderTokens } from 'src/constants/provider-token.constant';
+import { ProviderTokens } from 'src/common/constants/provider-token.constant';
 
 @Injectable()
 export class PetService {
   @Inject(ProviderTokens['FIRESTORE'])
   private readonly fireStoreService: FirestoreService;
   private readonly collectionName = 'pet';
-  // constructor(private readonly fireStoreService: FirestoreService) {}
+
+  private petCollectionSingleton: ReturnType<
+    typeof this.fireStoreService.getFirestoreCollection
+  >;
 
   get collection() {
-    return this.fireStoreService.getFirestoreCollection(this.collectionName);
+    if (!this.petCollectionSingleton) {
+      this.petCollectionSingleton =
+        this.fireStoreService.getFirestoreCollection(this.collectionName);
+    }
+    return this.petCollectionSingleton;
   }
 
   /**

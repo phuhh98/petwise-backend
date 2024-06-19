@@ -1,36 +1,43 @@
 import { RunnableMap } from '@langchain/core/runnables';
 import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
-import { geolocationParser } from './gemini_tools/geolocationParser';
-import { petDiaryJsonParser } from './gemini_tools/petDiaryJsonParser';
-import { petProfileJsonParser } from './gemini_tools/petProfileJsonParser';
-import { GoogleCustomJSONOutputParser } from './outputParser/geminiJSONOutputParser';
+import { geolocationParser } from './langchain/gemini_tools/geolocationParser';
+import { petDiaryJsonParser } from './langchain/gemini_tools/petDiaryJsonParser';
+import { petProfileJsonParser } from './langchain/gemini_tools/petProfileJsonParser';
+import { GoogleCustomJSONOutputParser } from './langchain/outputParser/geminiJSONOutputParser';
 import {
   geolocationPrompt,
   petDiaryBuilderPrompt,
   petProfileBuilderPrompt,
   travelAssistantPrompt,
-} from './prompts';
-import { petProfilebuilderHumanMessage } from './prompts/messageComponents/petProfileBuilderPrompts';
+} from './langchain/prompts';
+import { petProfilebuilderHumanMessage } from './langchain/prompts/messageComponents/petProfileBuilderPrompts';
 import { StringOutputParser } from '@langchain/core/output_parsers';
+import { ProviderTokens } from 'src/common/constants/provider-token.constant';
 
 @Injectable()
 export class LLMService {
-  private geminiModel = new ChatGoogleGenerativeAI({
-    apiKey:
-      this.configService.get<NodeJS.ProcessEnv['GEMINI_API_KEY']>(
-        'GEMINI_API_KEY',
-      ),
-    maxOutputTokens: 2048,
-    model: 'gemini-1.5-flash',
-    // verbose: true,
-  });
+  @Inject(ProviderTokens['CONFIG_SERVICE'])
+  private readonly configService: ConfigService<NodeJS.ProcessEnv>;
 
-  constructor(
-    private readonly configService: ConfigService<NodeJS.ProcessEnv>,
-  ) {}
+  private llmModelSingleton: ChatGoogleGenerativeAI;
+
+  get geminiModel() {
+    if (!this.llmModelSingleton) {
+      this.llmModelSingleton = new ChatGoogleGenerativeAI({
+        apiKey:
+          this.configService.get<NodeJS.ProcessEnv['GEMINI_API_KEY']>(
+            'GEMINI_API_KEY',
+          ),
+        maxOutputTokens: 2048,
+        model: 'gemini-1.5-flash',
+        // verbose: true,
+      });
+    }
+    return this.llmModelSingleton;
+  }
 
   async geolocation(question: string) {
     const geolocationChain = geolocationPrompt

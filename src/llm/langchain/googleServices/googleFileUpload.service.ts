@@ -1,16 +1,24 @@
 import { GoogleAIFileManager } from '@google/generative-ai/files';
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { ProviderTokens } from 'src/common/constants/provider-token.constant';
 
 @Injectable()
 export class GooleAIFileServiceWrapper {
-  private fileManager = new GoogleAIFileManager(
-    this.configService.get('GEMINI_API_KEY'),
-  );
+  @Inject(ProviderTokens['CONFIG_SERVICE'])
+  private readonly configService: ConfigService<NodeJS.ProcessEnv>;
 
-  constructor(
-    private readonly configService: ConfigService<NodeJS.ProcessEnv>,
-  ) {}
+  private fileManagerSingleton: GoogleAIFileManager;
+
+  get fileManager() {
+    if (!this.fileManagerSingleton) {
+      this.fileManagerSingleton = new GoogleAIFileManager(
+        this.configService.get('GEMINI_API_KEY'),
+      );
+    }
+
+    return this.fileManagerSingleton;
+  }
 
   public async deleteFile(fileId: string) {
     return await this.fileManager.deleteFile(fileId);

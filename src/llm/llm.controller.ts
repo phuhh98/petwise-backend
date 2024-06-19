@@ -15,9 +15,9 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
-import { FirebaseAuthenticationGuard } from 'src/firebase-authentication/firebase-authentication.guard';
-import { GooleAIFileServiceWrapper } from 'src/langchain/googleServices/googleFileUpload.service';
-import { LLMService } from 'src/langchain/llm.service';
+import { FirebaseAuthenticationGuard } from 'src/common/guards/firebase-authentication.guard';
+import { GooleAIFileServiceWrapper } from 'src/llm/langchain/googleServices/googleFileUpload.service';
+import { LLMService } from 'src/llm/llm.service';
 import { ControllerReturn } from 'src/types/nest-controller-return-format.types';
 import { v4 as uuidv4 } from 'uuid';
 

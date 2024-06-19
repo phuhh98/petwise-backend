@@ -1,14 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { getAuth } from 'firebase-admin/auth';
-import app from './firebase.config';
+import app from '../../configs/firebase.config';
 
 @Injectable()
 export class FirebaseAuthService {
   private auth = getAuth(app);
-  constructor(
-    private readonly configService: ConfigService<NodeJS.ProcessEnv>,
-  ) {}
 
   getAuth() {
     return this.auth;

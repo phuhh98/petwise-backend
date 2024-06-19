@@ -6,8 +6,8 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Request } from 'express';
-import { ProviderTokens } from 'src/constants/provider-token.constant';
-import { FirebaseAuthService } from 'src/firebase/firebase-auth.service';
+import { ProviderTokens } from 'src/common/constants/provider-token.constant';
+import { FirebaseAuthService } from 'src/common/services/firebase/firebase-auth.service';
 import { ResLocals } from 'src/types/express.types';
 
 @Injectable()

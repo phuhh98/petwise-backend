@@ -14,18 +14,19 @@ import {
 } from '@nestjs/common';
 import { CreatePetDto, UpdatePetDto } from './pet.dto';
 import { PetService } from './pet.service';
-import { FirebaseAuthenticationGuard } from 'src/firebase-authentication/firebase-authentication.guard';
+import { FirebaseAuthenticationGuard } from 'src/common/guards/firebase-authentication.guard';
 import { ResLocals } from 'src/types/express.types';
 import { ControllerReturn } from 'src/types/nest-controller-return-format.types';
 import { Pet, PetId } from 'src/types/pet.type';
-import { ProviderTokens } from 'src/constants/provider-token.constant';
-import { ErrorValidatorService } from 'src/error-validator/error-validator.service';
+import { ProviderTokens } from 'src/common/constants/provider-token.constant';
+import { TypeGuards } from 'src/common/services/type-guards.service';
+import { PetOwnershipGuard } from './pet-ownership.guard';
 
 @Controller('pet')
 @UseGuards(FirebaseAuthenticationGuard)
 export class PetController {
-  @Inject(ProviderTokens['ERROR_VALIDATOR'])
-  private readonly errorValidator: ErrorValidatorService;
+  @Inject(ProviderTokens['TYPE_GUARDS'])
+  private readonly typeGuards: TypeGuards;
 
   constructor(private readonly petService: PetService) {}
 
@@ -56,7 +57,7 @@ export class PetController {
 
     const createdPetData = await this.petService.createPet(createPetDto);
 
-    if (this.errorValidator.isError(createdPetData)) {
+    if (this.typeGuards.isError(createdPetData)) {
       throw new InternalServerErrorException(createdPetData.message);
     }
 
@@ -66,13 +67,14 @@ export class PetController {
     };
   }
 
+  @UseGuards(PetOwnershipGuard)
   @Get(':pet_id')
   async getPet(
     @Param('pet_id') pet_id: string,
   ): Promise<ControllerReturn.CrudCompletedMessage<Pet & PetId>> {
     const petData = await this.petService.getPet(pet_id);
 
-    if (this.errorValidator.isError(petData)) {
+    if (this.typeGuards.isError(petData)) {
       throw new NotFoundException(petData.message);
     }
 
@@ -82,6 +84,7 @@ export class PetController {
     };
   }
 
+  @UseGuards(PetOwnershipGuard)
   @Patch(':pet_id')
   async updatePet(
     @Param('pet_id') pet_id: string,
@@ -90,7 +93,7 @@ export class PetController {
   ) {
     const updatedData = await this.petService.updatePet(pet_id, updatePetDto);
 
-    if (this.errorValidator.isError(updatedData)) {
+    if (this.typeGuards.isError(updatedData)) {
       throw new InternalServerErrorException(updatedData.message);
     }
 
@@ -100,6 +103,7 @@ export class PetController {
     };
   }
 
+  @UseGuards(PetOwnershipGuard)
   @Delete(':pet_id')
   async deletePet(@Param('pet_id') pet_id: string) {
     await this.petService.deletePet(pet_id);

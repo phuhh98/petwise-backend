@@ -103,7 +103,7 @@ function messageContentMedia(content) {
 
 ### Firebase
 
-Put firebase service account key json file under **src/firebase** folder with name firbase.keys.json
+Put firebase service account key json file under **src/common/configs** folder with name firbase.keys.json
 
 ### Api document
 
