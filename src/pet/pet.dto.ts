@@ -1,10 +1,10 @@
 import { IsOptional, IsString, IsUrl, ValidateNested } from 'class-validator';
-import { Pet, PetProfileNS } from 'src/types/pet.type';
+import { IPet, PetProfileNS } from 'src/types/pet.type';
 import { Type } from 'class-transformer';
 import { OmitType, PartialType } from '@nestjs/swagger';
 
-namespace PetProfileDtoNS {
-  class PetCoatingDto implements PetProfileNS.PetCoating {
+export namespace PetProfileDtoNS {
+  class PetCoatingDto implements PetProfileNS.IPetCoating {
     @IsString()
     colors: string;
 
@@ -12,7 +12,7 @@ namespace PetProfileDtoNS {
     type: string;
   }
 
-  class PetHeadDto implements PetProfileNS.PetHead {
+  class PetHeadDto implements PetProfileNS.IPetHead {
     @IsString()
     ears: string;
 
@@ -26,7 +26,7 @@ namespace PetProfileDtoNS {
     shape: string;
   }
 
-  class PetBodyDto implements PetProfileNS.PetBody {
+  class PetBodyDto implements PetProfileNS.IPetBody {
     @IsString()
     build: string;
 
@@ -34,7 +34,7 @@ namespace PetProfileDtoNS {
     tail: string;
   }
 
-  class PetHealthDto implements PetProfileNS.PetHealth {
+  class PetHealthDto implements PetProfileNS.IPetHealth {
     @IsString()
     commonHealthIssues: string;
 
@@ -42,14 +42,14 @@ namespace PetProfileDtoNS {
     lifespan: string;
   }
 
-  class PetGroomingDto implements PetProfileNS.PetGrooming {
+  class PetGroomingDto implements PetProfileNS.IPetGrooming {
     @IsString()
     bathing: string;
 
     @IsString()
     frequency: string;
   }
-  class PetExerciseDto implements PetProfileNS.PetExercise {
+  class PetExerciseDto implements PetProfileNS.IPetExercise {
     @IsString()
     needs: string;
 
@@ -57,7 +57,7 @@ namespace PetProfileDtoNS {
     suitableFor: string;
   }
 
-  class PetTemperamentDto implements PetProfileNS.PetTemperament {
+  class PetTemperamentDto implements PetProfileNS.IPetTemperament {
     @IsString()
     barkingTendency: string;
 
@@ -71,7 +71,7 @@ namespace PetProfileDtoNS {
     trainability: string;
   }
 
-  class PetAppearanceDto implements PetProfileNS.PetAppearance {
+  class PetAppearanceDto implements PetProfileNS.IPetAppearance {
     @IsString()
     size: string;
 
@@ -91,7 +91,7 @@ namespace PetProfileDtoNS {
     legs: string;
   }
 
-  export class PetProfileDto implements PetProfileNS.PetProfile {
+  export class PetProfileDto implements PetProfileNS.IPetProfile {
     @IsString()
     type: string;
 
@@ -123,7 +123,29 @@ namespace PetProfileDtoNS {
   }
 }
 
-export class CreatePetDto implements Pet {
+export class Pet implements IPet {
+  id: string;
+
+  user_id: string;
+
+  @IsString()
+  name: string;
+
+  @IsOptional()
+  @IsString()
+  bio?: string;
+
+  @IsOptional()
+  @IsUrl()
+  avatar?: string;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => PartialType(PetProfileDtoNS.PetProfileDto))
+  profile?: PetProfileDtoNS.PetProfileDto;
+}
+
+export class CreatePetDto implements IPet {
   id: string;
 
   user_id: string;

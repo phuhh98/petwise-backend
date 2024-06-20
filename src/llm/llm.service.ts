@@ -16,6 +16,14 @@ import {
 import { petProfilebuilderHumanMessage } from './langchain/prompts/messageComponents/petProfileBuilderPrompts';
 import { StringOutputParser } from '@langchain/core/output_parsers';
 import { ProviderTokens } from 'src/common/constants/provider-token.constant';
+import { petDiaryBuilderHumanMessage } from './langchain/prompts/messageComponents/petDiaryBuilderPrompts';
+import {
+  IGeolocationRes,
+  IPetDiaryBuilderReponse,
+  IPetProfileBuilderRes,
+  ITravelAssisstantQuery,
+  ITravelAssisstantReponse,
+} from './llm.type';
 
 @Injectable()
 export class LLMService {
@@ -46,19 +54,15 @@ export class LLMService {
           tools: [{ functionDeclarations: [geolocationParser] }],
         }),
       )
-      .pipe(new GoogleCustomJSONOutputParser());
+      .pipe<IGeolocationRes>(new GoogleCustomJSONOutputParser());
 
     const travelAssitantChain = travelAssistantPrompt
       .pipe(this.geminiModel)
       .pipe(new StringOutputParser());
 
     const master = RunnableMap.from<
-      | Parameters<typeof geolocationChain.invoke>[0]
-      | Parameters<typeof travelAssitantChain.invoke>[0],
-      {
-        location: Awaited<ReturnType<typeof this.geolocationChain.invoke>>;
-        answer: Awaited<ReturnType<typeof this.travelAssitantChain.invoke>>;
-      }
+      ITravelAssisstantQuery,
+      ITravelAssisstantReponse
     >({
       location: geolocationChain,
       answer: travelAssitantChain,
@@ -82,10 +86,10 @@ export class LLMService {
           tools: [{ functionDeclarations: [petDiaryJsonParser] }],
         }),
       )
-      .pipe(new GoogleCustomJSONOutputParser());
+      .pipe<IPetDiaryBuilderReponse>(new GoogleCustomJSONOutputParser());
 
     return await petDiaryBuilderChain.invoke({
-      message: petProfilebuilderHumanMessage({ fileUri, mimeType }),
+      message: petDiaryBuilderHumanMessage({ fileUri, mimeType }),
       pet_profile,
     });
   }
@@ -103,7 +107,7 @@ export class LLMService {
           tools: [{ functionDeclarations: [petProfileJsonParser] }],
         }),
       )
-      .pipe(new GoogleCustomJSONOutputParser());
+      .pipe<IPetProfileBuilderRes>(new GoogleCustomJSONOutputParser());
 
     return await petProfileBuilderChain.invoke({
       message: petProfilebuilderHumanMessage({ fileUri, mimeType }),

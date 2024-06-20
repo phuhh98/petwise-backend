@@ -3,32 +3,33 @@ import {
   Controller,
   Delete,
   Get,
-  Inject,
   Param,
   Patch,
   Post,
   Res,
   UseGuards,
 } from '@nestjs/common';
-import { CreatePetDto, UpdatePetDto } from './pet.dto';
+import { CreatePetDto, Pet, UpdatePetDto } from './pet.dto';
 import { PetService } from './pet.service';
 import { FirebaseAuthenticationGuard } from 'src/common/guards/firebase-authentication.guard';
 import { ResLocals } from 'src/types/express.types';
-// import { ControllerReturn } from 'src/types/nest-controller-return-format.types';
-// import { Pet, PetId } from 'src/types/pet.type';
-import { ProviderTokens } from 'src/common/constants/provider-token.constant';
-import { TypeGuards } from 'src/common/services/type-guards.service';
 import { PetOwnershipGuard } from './pet-ownership.guard';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import {
+  ApiAppSuccessResponse,
+  ApiAppSuccessResponseArrayData,
+} from 'src/common/decorators/generic-response.decorator';
+import { EmptyDto } from 'src/common/dto/common-request.dto';
 
+@ApiTags('pet')
+@ApiBearerAuth()
 @Controller('pet')
 @UseGuards(FirebaseAuthenticationGuard)
 export class PetController {
-  @Inject(ProviderTokens['TYPE_GUARDS'])
-  private readonly typeGuards: TypeGuards;
-
   constructor(private readonly petService: PetService) {}
 
   @Get('list')
+  @ApiAppSuccessResponseArrayData(Pet)
   async listPet(
     @Res({ passthrough: true })
     response: ResLocals.FirebaseAuthenticatedRequest,
@@ -44,6 +45,7 @@ export class PetController {
   }
 
   @Post()
+  @ApiAppSuccessResponse(Pet, 'pet')
   async createPet(
     @Body()
     createPetDto: CreatePetDto,
@@ -63,6 +65,7 @@ export class PetController {
 
   @UseGuards(PetOwnershipGuard)
   @Get(':pet_id')
+  @ApiAppSuccessResponse(Pet, 'pet')
   async getPet(
     @Param('pet_id') pet_id: string,
   ) /*: Promise<ControllerReturn.CrudCompletedMessage<Pet & PetId>> */ {
@@ -76,6 +79,7 @@ export class PetController {
 
   @UseGuards(PetOwnershipGuard)
   @Patch(':pet_id')
+  @ApiAppSuccessResponse(Pet, 'pet')
   async updatePet(
     @Param('pet_id') pet_id: string,
     @Body()
@@ -91,6 +95,7 @@ export class PetController {
 
   @UseGuards(PetOwnershipGuard)
   @Delete(':pet_id')
+  @ApiAppSuccessResponse(EmptyDto)
   async deletePet(@Param('pet_id') pet_id: string) {
     await this.petService.remove(pet_id);
 

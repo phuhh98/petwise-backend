@@ -11,4 +11,4 @@ export interface Read<T> {
   findOne(id: string): Promise<T>;
 }
 
-export interface BaseServiceInterface<T> extends Write<T>, Read<T> {}
+export interface IBaseService<T> extends Write<T>, Read<T> {}

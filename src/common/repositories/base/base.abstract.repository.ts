@@ -1,5 +1,5 @@
-import { BaseEntity, FindAllResponse } from 'src/types/common.type';
-import { BaseRepositoryInterface } from './base.interface.repository';
+import { IBaseEntity, FindAllResponse } from 'src/types/common.type';
+import { IBaseRepository } from './base.interface.repository';
 import {
   CollectionReference,
   FieldPath,
@@ -8,8 +8,8 @@ import {
   WhereFilterOp,
 } from 'firebase-admin/firestore';
 
-export abstract class BaseRepositoryAbstract<T extends BaseEntity>
-  implements BaseRepositoryInterface<T>
+export abstract class BaseRepositoryAbstract<T extends IBaseEntity>
+  implements IBaseRepository<T>
 {
   private readonly collection: CollectionReference<Omit<T, 'id'>>;
   protected constructor(

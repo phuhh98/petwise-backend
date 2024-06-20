@@ -1,9 +1,8 @@
-import { BaseRepositoryInterface } from 'src/common/repositories/base/base.interface.repository';
-import { Pet, PetId } from 'src/types/pet.type';
+import { IBaseRepository } from 'src/common/repositories/base/base.interface.repository';
+import { IPet } from 'src/types/pet.type';
 
-export interface PetRepositoryInterface
-  extends BaseRepositoryInterface<Pet & PetId> {
+export interface IPetRepository extends IBaseRepository<IPet> {
   listPetByUserId(
     user_id: string,
-  ): ReturnType<BaseRepositoryInterface<Pet & PetId>['findAll']>;
+  ): ReturnType<IBaseRepository<IPet>['findAll']>;
 }

@@ -35,10 +35,3 @@ export const geolocationParser: FunctionDeclaration = {
     type: FunctionDeclarationSchemaType.OBJECT,
   },
 };
-
-export type GeolocationResponse = {
-  ISO_A3: string;
-  lat: number;
-  lng: number;
-  place_name: string;
-};

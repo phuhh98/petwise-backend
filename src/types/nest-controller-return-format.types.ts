@@ -1,14 +1,14 @@
-export namespace ControllerReturn {
-  export interface CrudCompletedMessage<T extends object> {
-    [key: string]: string | T;
-    message: string;
-  }
+// export namespace ControllerReturn {
+//   export interface ICrudMessage<T extends object> {
+//     [key: string]: string | T;
+//     message: string;
+//   }
 
-  export interface LLMCompletedMessage<T extends object> {
-    message: string;
-    data: string | T;
-  }
-}
+//   export interface ILLMMessage<T extends object | string> {
+//     message: string;
+//     data: string | T;
+//   }
+// }
 
 export interface CustomResponseReturn<T> {
   message: string;

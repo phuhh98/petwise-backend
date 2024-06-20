@@ -5,6 +5,7 @@ export function configSwagger(app: INestApplication) {
     .setTitle('Pet wise project')
     .setDescription('## The backend api description')
     .setVersion('0.1')
+    .addBearerAuth()
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api-docs', app, document);

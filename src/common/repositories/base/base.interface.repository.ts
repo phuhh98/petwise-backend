@@ -3,9 +3,9 @@ import {
   OrderByDirection,
   WhereFilterOp,
 } from 'firebase-admin/firestore';
-import { BaseEntity, FindAllResponse } from 'src/types/common.type';
+import { IBaseEntity, FindAllResponse } from 'src/types/common.type';
 
-export interface BaseRepositoryInterface<T extends BaseEntity> {
+export interface IBaseRepository<T extends IBaseEntity> {
   create(dto: T): Promise<T>;
 
   findOneById(id: string, projection?: string): Promise<T>;

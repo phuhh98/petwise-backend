@@ -18,10 +18,19 @@ import * as path from 'node:path';
 import { FirebaseAuthenticationGuard } from 'src/common/guards/firebase-authentication.guard';
 import { GooleAIFileServiceWrapper } from 'src/llm/langchain/googleServices/googleFileUpload.service';
 import { LLMService } from 'src/llm/llm.service';
-import { ControllerReturn } from 'src/types/nest-controller-return-format.types';
 import { v4 as uuidv4 } from 'uuid';
-import { TravelAssitantDto } from './llm.dto';
+import {
+  PetDiaryDto,
+  TravelAssisstantResDto,
+  TravelAssitantQueryDto,
+} from './llm.dto';
+import { ApiBearerAuth, ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
+import { ApiAppSuccessResponse } from 'src/common/decorators/generic-response.decorator';
+import { FileUploadDto } from 'src/common/dto/common-request.dto';
+import { PetProfileDtoNS } from 'src/pet/pet.dto';
 
+@ApiTags('llm')
+@ApiBearerAuth()
 @Controller('llm')
 @UseGuards(FirebaseAuthenticationGuard)
 export class LLMController {
@@ -32,11 +41,10 @@ export class LLMController {
 
   @Post('travel-assistant')
   @HttpCode(HttpStatus.OK)
-  async genericPrompt(
-    @Body() data: TravelAssitantDto,
-  ): Promise<ControllerReturn.LLMCompletedMessage> {
+  @ApiAppSuccessResponse(TravelAssisstantResDto)
+  async genericPrompt(@Body() query: TravelAssitantQueryDto) {
     return {
-      data: await this.llmService.geolocation(data.question),
+      data: await this.llmService.geolocation(query.question),
       message: 'Generation succeed',
     };
   }
@@ -44,6 +52,12 @@ export class LLMController {
   @Post('pet-profile-builder')
   @HttpCode(HttpStatus.OK)
   @UseInterceptors(FileInterceptor('file'))
+  @ApiAppSuccessResponse(PetProfileDtoNS.PetProfileDto)
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    description: 'A short video of a pet',
+    type: FileUploadDto,
+  })
   async petProfileBuilder(
     @UploadedFile(
       new ParseFilePipe({
@@ -65,7 +79,7 @@ export class LLMController {
       }),
     )
     file: Express.Multer.File,
-  ): Promise<ControllerReturn.LLMCompletedMessage> {
+  ) {
     /**
      * File temporary store is out side of try block
      */
@@ -114,6 +128,12 @@ export class LLMController {
   @Post('pet-diary-builder')
   @HttpCode(HttpStatus.OK)
   @UseInterceptors(FileInterceptor('file'))
+  @ApiAppSuccessResponse(PetDiaryDto)
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    description: 'An image of pet',
+    type: FileUploadDto,
+  })
   async petDiaryBuilder(
     @UploadedFile(
       new ParseFilePipe({
@@ -135,7 +155,7 @@ export class LLMController {
       }),
     )
     file: Express.Multer.File,
-  ): Promise<ControllerReturn.LLMCompletedMessage> {
+  ) {
     /**
      * File temporary store is out side of try block
      */
