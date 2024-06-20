@@ -1,5 +1,5 @@
 import { IsOptional, IsString, IsUrl, ValidateNested } from 'class-validator';
-import { IPet, PetProfileNS } from 'src/types/pet.type';
+import { IPet, IUploadedFile, PetProfileNS } from 'src/types/pet.type';
 import { Type } from 'class-transformer';
 import { OmitType, PartialType } from '@nestjs/swagger';
 
@@ -123,6 +123,17 @@ export namespace PetProfileDtoNS {
   }
 }
 
+export class UploadedFileDto implements IUploadedFile {
+  @IsString()
+  file_name: string;
+
+  @IsString()
+  file_id: string;
+
+  @IsUrl()
+  public_url: string;
+}
+
 export class Pet implements IPet {
   id: string;
 
@@ -135,9 +146,9 @@ export class Pet implements IPet {
   @IsString()
   bio?: string;
 
-  @IsOptional()
-  @IsUrl()
-  avatar?: string;
+  @ValidateNested()
+  @Type(() => PartialType(UploadedFileDto))
+  avatar: UploadedFileDto;
 
   @IsOptional()
   @ValidateNested()
@@ -145,27 +156,7 @@ export class Pet implements IPet {
   profile?: PetProfileDtoNS.PetProfileDto;
 }
 
-export class CreatePetDto implements IPet {
-  id: string;
-
-  user_id: string;
-
-  @IsString()
-  name: string;
-
-  @IsOptional()
-  @IsString()
-  bio?: string;
-
-  @IsOptional()
-  @IsUrl()
-  avatar?: string;
-
-  @IsOptional()
-  @ValidateNested()
-  @Type(() => PartialType(PetProfileDtoNS.PetProfileDto))
-  profile?: PetProfileDtoNS.PetProfileDto;
-}
+export class CreatePetDto extends OmitType(Pet, ['id', 'avatar']) {}
 
 export class UpdatePetDto extends PartialType(
   OmitType(CreatePetDto, ['user_id']),

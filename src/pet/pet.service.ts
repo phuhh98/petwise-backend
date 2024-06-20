@@ -4,6 +4,7 @@ import { IPet } from 'src/types/pet.type';
 import { FindAllResponse } from 'src/types/common.type';
 import { PetRepository } from './pet.repository';
 import { IBaseRepository } from 'src/common/repositories/base/base.interface.repository';
+import { IAvatarUploadOptions } from './interfaces/pet.interface.repository';
 
 @Injectable()
 export class PetService extends BaseServiceAbstract<IPet> {
@@ -45,5 +46,23 @@ export class PetService extends BaseServiceAbstract<IPet> {
 
   async listPet(user_id: string) {
     return this.petRepository.listPetByUserId(user_id);
+  }
+
+  async uploadAvatarImage({
+    file_name,
+    contentType,
+    fileAbsolutePath,
+    customMetadata,
+  }: IAvatarUploadOptions) {
+    return await this.petRepository.uploadPetAvatar({
+      file_name,
+      contentType,
+      fileAbsolutePath,
+      customMetadata,
+    });
+  }
+
+  async deleteAvatarImage(file_name: string) {
+    return await this.petRepository.deleteFile(file_name);
   }
 }

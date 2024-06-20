@@ -55,7 +55,7 @@ export class LLMController {
   @ApiAppSuccessResponse(PetProfileDtoNS.PetProfileDto)
   @ApiConsumes('multipart/form-data')
   @ApiBody({
-    description: 'A short video of a pet',
+    description: 'A image of a pet',
     type: FileUploadDto,
   })
   async petProfileBuilder(
@@ -131,7 +131,7 @@ export class LLMController {
   @ApiAppSuccessResponse(PetDiaryDto)
   @ApiConsumes('multipart/form-data')
   @ApiBody({
-    description: 'An image of pet',
+    description: 'A video of a  pet',
     type: FileUploadDto,
   })
   async petDiaryBuilder(

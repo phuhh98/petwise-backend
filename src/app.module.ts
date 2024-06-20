@@ -11,6 +11,7 @@ import { TypeGuards } from './common/services/type-guards.service';
 import { ProviderTokens } from './common/constants/provider-token.constant';
 import { FirestoreService } from './common/services/firebase/firestore.service';
 import { FirebaseAuthService } from './common/services/firebase/firebase-auth.service';
+import { FirestorageService } from './common/services/firebase/firebase-storage.service';
 
 @Global()
 @Module({
@@ -37,6 +38,11 @@ import { FirebaseAuthService } from './common/services/firebase/firebase-auth.se
       provide: FirestoreService,
       useClass: FirestoreService,
     },
+
+    {
+      provide: FirestorageService,
+      useClass: FirestorageService,
+    },
     {
       provide: ProviderTokens['FIREBASE_AUTH'],
       useClass: FirebaseAuthService,
@@ -48,6 +54,7 @@ import { FirebaseAuthService } from './common/services/firebase/firebase-auth.se
   ],
   exports: [
     FirestoreService,
+    FirestorageService,
     ProviderTokens['FIREBASE_AUTH'],
     ProviderTokens['TYPE_GUARDS'],
     ProviderTokens['CONFIG_SERVICE'],

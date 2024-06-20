@@ -3,8 +3,14 @@ export interface IPet {
   user_id: string;
   name: string;
   bio?: string;
-  avatar?: string;
+  avatar?: IUploadedFile;
   profile?: PetProfileNS.IPetProfile;
+}
+
+export interface IUploadedFile {
+  file_name: string;
+  file_id: string;
+  public_url: string;
 }
 
 export namespace PetProfileNS {

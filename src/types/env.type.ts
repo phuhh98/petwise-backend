@@ -8,6 +8,12 @@ declare global {
        * e.g.:  http://localhost:8000||http://localhost:5000
        */
       CORS_ALLOWED_ORIGIN: string;
+
+      /**
+       * Firebase storage bucket name
+       * It start with gs://<whatever>
+       */
+      FIREBASE_STORAGE_BUCKET: string;
     }
   }
 }
