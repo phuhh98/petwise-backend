@@ -1,7 +1,11 @@
 import { IsOptional, IsString, IsUrl, ValidateNested } from 'class-validator';
-import { IPet, IUploadedFile, PetProfileNS } from 'src/types/pet.type';
+import {
+  IPet,
+  IUploadedFile,
+  PetProfileNS,
+} from 'src/interfaces/entities/pet.interface';
 import { Type } from 'class-transformer';
-import { OmitType, PartialType } from '@nestjs/swagger';
+import { PartialType } from '@nestjs/swagger';
 
 export namespace PetProfileDtoNS {
   class PetCoatingDto implements PetProfileNS.IPetCoating {
@@ -155,9 +159,3 @@ export class Pet implements IPet {
   @Type(() => PartialType(PetProfileDtoNS.PetProfileDto))
   profile?: PetProfileDtoNS.PetProfileDto;
 }
-
-export class CreatePetDto extends OmitType(Pet, ['id', 'avatar']) {}
-
-export class UpdatePetDto extends PartialType(
-  OmitType(CreatePetDto, ['user_id']),
-) {}

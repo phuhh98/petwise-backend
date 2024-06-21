@@ -3,7 +3,8 @@ import {
   OrderByDirection,
   WhereFilterOp,
 } from 'firebase-admin/firestore';
-import { IBaseEntity, FindAllResponse } from 'src/types/common.type';
+import { IBaseEntity } from 'src/interfaces/entities/common.interface';
+import { IFindManyReturnFormat } from 'src/interfaces/services/find-many-return.interface';
 
 export interface IBaseRepository<T extends IBaseEntity> {
   create(dto: T): Promise<T>;
@@ -26,7 +27,7 @@ export interface IBaseRepository<T extends IBaseEntity> {
       limit?: number;
       offSet?: number;
     },
-  ): Promise<FindAllResponse<T>>;
+  ): Promise<IFindManyReturnFormat<T>>;
 
   update(id: string, dto: Partial<T>): Promise<T>;
 

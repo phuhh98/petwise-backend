@@ -4,12 +4,12 @@ import {
   IAvatarUploadOptions,
   IPetRepository,
 } from './interfaces/pet.interface.repository';
-import { IPet } from 'src/types/pet.type';
+import { IPet } from 'src/interfaces/entities/pet.interface';
 import { FirestoreService } from 'src/common/services/firebase/firestore.service';
 import { IBaseRepository } from 'src/common/repositories/base/base.interface.repository';
 import { FirestorageService } from 'src/common/services/firebase/firebase-storage.service';
 import { Bucket } from '@google-cloud/storage';
-import { UploadedFileDto } from './pet.dto';
+import { UploadedFileDto } from './dto/pet.dto';
 
 @Injectable()
 export class PetRepository

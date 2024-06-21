@@ -16,21 +16,22 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { CreatePetDto, Pet, UpdatePetDto } from './pet.dto';
+import { Pet } from './dto/pet.dto';
 import { PetService } from './pet.service';
 import { FirebaseAuthenticationGuard } from 'src/common/guards/firebase-authentication.guard';
-import { ResLocals } from 'src/types/express.types';
+import { ResLocals } from 'src/interfaces/express.interface';
 import { PetOwnershipGuard } from './pet-ownership.guard';
 import { ApiBearerAuth, ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import {
   ApiAppSuccessResponse,
   ApiAppSuccessResponseArrayData,
-} from 'src/common/decorators/generic-response.decorator';
+} from 'src/common/decorators/swagger/generic-response.decorator';
 import { EmptyDto, FileUploadDto } from 'src/common/dto/common-request.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { v4 as uuidv4 } from 'uuid';
 import path from 'node:path';
 import fs from 'node:fs/promises';
+import { CreatePetDto, UpdatePetDto } from './dto/request.dto';
 
 @ApiTags('pet')
 @ApiBearerAuth()
@@ -45,7 +46,7 @@ export class PetController {
   async listPet(
     @Res({ passthrough: true })
     response: ResLocals.FirebaseAuthenticatedRequest,
-  ) /*: Promise<ControllerReturn.CrudCompletedMessage<(Pet & PetId)[]>>*/ {
+  ) {
     const user_id = response.locals.user_id;
 
     const pets = await this.petService.listPet(user_id);
@@ -80,9 +81,7 @@ export class PetController {
   @HttpCode(HttpStatus.OK)
   @Get(':pet_id')
   @ApiAppSuccessResponse(Pet, 'pet')
-  async getPet(
-    @Param('pet_id') pet_id: string,
-  ) /*: Promise<ControllerReturn.CrudCompletedMessage<Pet & PetId>> */ {
+  async getPet(@Param('pet_id') pet_id: string) {
     const pet = await this.petService.findOne(pet_id);
 
     return {

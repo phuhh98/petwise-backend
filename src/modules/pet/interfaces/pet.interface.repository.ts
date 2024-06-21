@@ -1,6 +1,6 @@
 import { IBaseRepository } from 'src/common/repositories/base/base.interface.repository';
-import { IPet } from 'src/types/pet.type';
-import { UploadedFileDto } from '../pet.dto';
+import { IPet } from 'src/interfaces/entities/pet.interface';
+import { UploadedFileDto } from '../dto/pet.dto';
 
 export interface IPetRepository extends IBaseRepository<IPet> {
   listPetByUserId(

@@ -7,12 +7,11 @@ import {
 } from '@nestjs/common';
 import { PetService } from './pet.service';
 import { Request } from 'express';
-import { ResLocals } from 'src/types/express.types';
+import { ResLocals } from 'src/interfaces/express.interface';
 
 /**
- * Route guard to validate user ownership of pet
+ * Route guard to validate user ownership of pet base on :pet_id request nvm route param
  * Use on single pet access endpoints
- * Request param :pet_id
  * Required to include FirebaseAuthenticationGuard before to let user_id available in response.locals
  */
 @Injectable()

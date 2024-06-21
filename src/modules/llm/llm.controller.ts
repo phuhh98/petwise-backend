@@ -16,8 +16,8 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import { FirebaseAuthenticationGuard } from 'src/common/guards/firebase-authentication.guard';
-import { GooleAIFileServiceWrapper } from 'src/llm/langchain/googleServices/googleFileUpload.service';
-import { LLMService } from 'src/llm/llm.service';
+import { GooleAIFileServiceWrapper } from './langchain/googleServices/googleFileUpload.service';
+import { LLMService } from './llm.service';
 import { v4 as uuidv4 } from 'uuid';
 import {
   PetDiaryDto,
@@ -25,9 +25,9 @@ import {
   TravelAssitantQueryDto,
 } from './llm.dto';
 import { ApiBearerAuth, ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
-import { ApiAppSuccessResponse } from 'src/common/decorators/generic-response.decorator';
+import { ApiAppSuccessResponse } from 'src/common/decorators/swagger/generic-response.decorator';
 import { FileUploadDto } from 'src/common/dto/common-request.dto';
-import { PetProfileDtoNS } from 'src/pet/pet.dto';
+import { PetProfileDtoNS } from 'src/modules/pet/dto/pet.dto';
 
 @ApiTags('llm')
 @ApiBearerAuth()

@@ -72,15 +72,3 @@ export namespace PetProfileNS {
     suitableFor: string;
   }
 }
-
-export interface IPetEmotion {
-  description: string;
-  primary_emotion: string;
-  secondary_emotions: string[];
-}
-
-export interface IPetDiary {
-  actions: string[];
-  advice: string;
-  emotions: IPetEmotion;
-}

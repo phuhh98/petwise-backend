@@ -1,5 +1,6 @@
-import { IDataWithError } from 'src/types/common.type';
-import { IPetDiary, PetProfileNS } from 'src/types/pet.type';
+import { IDataWithError } from 'src/interfaces/entities/common.interface';
+import { PetProfileNS } from 'src/interfaces/entities/pet.interface';
+import { PetDiaryNS } from 'src/interfaces/entities/pet-diary.interface';
 
 export interface IGeolocationRes {
   ISO_A3: string;
@@ -23,6 +24,8 @@ export interface IPetProfileBuilderRes
   error: string;
 }
 
-export interface IPetDiaryBuilderReponse extends IPetDiary, IDataWithError {
+export interface IPetDiaryBuilderReponse
+  extends PetDiaryNS.IPetDiaryGenaratedAnalysis,
+    IDataWithError {
   error: string;
 }

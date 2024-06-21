@@ -1,4 +1,4 @@
-import { IBaseEntity, FindAllResponse } from 'src/types/common.type';
+import { IBaseEntity } from 'src/interfaces/entities/common.interface';
 import { IBaseRepository } from './base.interface.repository';
 import {
   CollectionReference,
@@ -7,6 +7,7 @@ import {
   OrderByDirection,
   WhereFilterOp,
 } from 'firebase-admin/firestore';
+import { IFindManyReturnFormat } from 'src/interfaces/services/find-many-return.interface';
 
 export abstract class BaseRepositoryAbstract<T extends IBaseEntity>
   implements IBaseRepository<T>
@@ -57,7 +58,7 @@ export abstract class BaseRepositoryAbstract<T extends IBaseEntity>
     condition: {
       fieldPath: string | FieldPath;
       opStr: WhereFilterOp;
-      value: any;
+      value: unknown;
     }[],
     options?: {
       orderBy?: {
@@ -67,7 +68,7 @@ export abstract class BaseRepositoryAbstract<T extends IBaseEntity>
       limit?: number;
       offSet?: number;
     },
-  ): Promise<FindAllResponse<T>> {
+  ): Promise<IFindManyReturnFormat<T>> {
     let query: ReturnType<CollectionReference<Omit<T, 'id'>>['where']>;
     for (let i = 0; i < condition.length; i++) {
       if (!query) {

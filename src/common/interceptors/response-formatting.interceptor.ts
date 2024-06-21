@@ -7,16 +7,16 @@ import {
 import { Response } from 'express';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { CustomResponseReturn } from 'src/types/nest-controller-return-format.types';
+import { IAppStandardReponseFormat } from 'src/interfaces/response/app-standard-response.interface';
 
 @Injectable()
 export class ResponseFormattingInterceptor<T>
-  implements NestInterceptor<T, CustomResponseReturn<T>>
+  implements NestInterceptor<T, IAppStandardReponseFormat<T>>
 {
   intercept(
     context: ExecutionContext,
     next: CallHandler,
-  ): Observable<CustomResponseReturn<T>> {
+  ): Observable<IAppStandardReponseFormat<T>> {
     return next.handle().pipe(
       map((data) => {
         return {

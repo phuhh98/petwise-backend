@@ -1,17 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { BaseServiceAbstract } from 'src/common/services/base/base.abstract.service';
-import { IPet } from 'src/types/pet.type';
-import { FindAllResponse } from 'src/types/common.type';
+import { IPet } from 'src/interfaces/entities/pet.interface';
 import { PetRepository } from './pet.repository';
 import { IBaseRepository } from 'src/common/repositories/base/base.interface.repository';
 import { IAvatarUploadOptions } from './interfaces/pet.interface.repository';
+import { IFindManyReturnFormat } from 'src/interfaces/services/find-many-return.interface';
 
 @Injectable()
 export class PetService extends BaseServiceAbstract<IPet> {
-  constructor(
-    private readonly petRepository: PetRepository,
-    // private readonly user_roles_service: UserRolesService,
-  ) {
+  constructor(private readonly petRepository: PetRepository) {
     super(petRepository);
   }
 
@@ -36,7 +33,7 @@ export class PetService extends BaseServiceAbstract<IPet> {
   async findAll(
     filter: Parameters<IBaseRepository<IPet>['findAll']>[0],
     options?: Parameters<IBaseRepository<IPet>['findAll']>[1],
-  ): Promise<FindAllResponse<IPet>> {
+  ): Promise<IFindManyReturnFormat<IPet>> {
     return await this.petRepository.findAll(filter, options);
   }
 

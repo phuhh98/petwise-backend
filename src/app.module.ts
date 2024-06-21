@@ -5,14 +5,17 @@ import { APP_INTERCEPTOR } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ResponseFormattingInterceptor } from './common/interceptors/response-formatting.interceptor';
-import { LLMModule } from './llm/llm.module';
-import { PetModule } from './pet/pet.module';
-import { TypeGuards } from './common/services/type-guards.service';
+import { LLMModule } from './modules/llm/llm.module';
+import { PetModule } from './modules/pet/pet.module';
 import { ProviderTokens } from './common/constants/provider-token.constant';
 import { FirestoreService } from './common/services/firebase/firestore.service';
 import { FirebaseAuthService } from './common/services/firebase/firebase-auth.service';
 import { FirestorageService } from './common/services/firebase/firebase-storage.service';
 
+/**
+ * This modules is marked as Global so that all of it exported modules/provider is shared globally
+ * and can be accessed via constructor or class prop initialize injection
+ */
 @Global()
 @Module({
   controllers: [AppController],
@@ -31,14 +34,9 @@ import { FirestorageService } from './common/services/firebase/firebase-storage.
       useClass: ResponseFormattingInterceptor,
     },
     {
-      provide: ProviderTokens['TYPE_GUARDS'],
-      useClass: TypeGuards,
-    },
-    {
       provide: FirestoreService,
       useClass: FirestoreService,
     },
-
     {
       provide: FirestorageService,
       useClass: FirestorageService,
@@ -52,11 +50,15 @@ import { FirestorageService } from './common/services/firebase/firebase-storage.
       useClass: ConfigService,
     },
   ],
+
+  /**
+   * Export a string name so that it could be injected by class prop init injection
+   * Export a class itself so that it could be injected by passing class instance to Injectable constructor
+   */
   exports: [
     FirestoreService,
     FirestorageService,
     ProviderTokens['FIREBASE_AUTH'],
-    ProviderTokens['TYPE_GUARDS'],
     ProviderTokens['CONFIG_SERVICE'],
   ],
 })
