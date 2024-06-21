@@ -16,31 +16,96 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { Pet } from './dto/pet.dto';
-import { PetService } from './pet.service';
-import { FirebaseAuthenticationGuard } from 'src/common/guards/firebase-authentication.guard';
-import { ResLocals } from 'src/interfaces/express.interface';
-import { PetOwnershipGuard } from './pet-ownership.guard';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
+import fs from 'node:fs/promises';
+import path from 'node:path';
 import {
   ApiAppSuccessResponse,
   ApiAppSuccessResponseArrayData,
 } from 'src/common/decorators/swagger/generic-response.decorator';
 import { EmptyDto, FileUploadDto } from 'src/common/dto/common-request.dto';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FirebaseAuthenticationGuard } from 'src/common/guards/firebase-authentication.guard';
+import { ResLocals } from 'src/interfaces/express.interface';
 import { v4 as uuidv4 } from 'uuid';
-import path from 'node:path';
-import fs from 'node:fs/promises';
-import { CreatePetDto, UpdatePetDto } from './dto/request.dto';
 
-@ApiTags('pet')
+import { Pet } from './dto/pet.dto';
+import { CreatePetDto, UpdatePetDto } from './dto/request.dto';
+import { PetService } from './pet.service';
+import { PetOwnershipGuard } from './pet-ownership.guard';
+
+const CONTROLLER_ROUTE_PATH = 'pet';
+const ENTITY_PATH = 'pet';
+
+enum REQUEST_PARAM {
+  ENTITY_ID = 'pet_id',
+  FILE_FIELD_NAME = 'file',
+}
+
+enum ROUTES {
+  CREATE = ENTITY_PATH,
+  DELETE = `${ENTITY_PATH}/:${REQUEST_PARAM.ENTITY_ID}`,
+  GET = `${ENTITY_PATH}/:${REQUEST_PARAM.ENTITY_ID}`,
+  LIST = 'list',
+  UPDATE = `${ENTITY_PATH}/:${REQUEST_PARAM.ENTITY_ID}`,
+  UPLOAD_AVATAR = `${ENTITY_PATH}/:${REQUEST_PARAM.ENTITY_ID}/avatar`,
+}
+
+@ApiTags(CONTROLLER_ROUTE_PATH)
 @ApiBearerAuth()
-@Controller('pet')
+@Controller(CONTROLLER_ROUTE_PATH)
 @UseGuards(FirebaseAuthenticationGuard)
 export class PetController {
   constructor(private readonly petService: PetService) {}
 
-  @Get('list')
+  @Post(ROUTES.CREATE)
+  @HttpCode(HttpStatus.CREATED)
+  @ApiAppSuccessResponse(Pet, 'pet')
+  async createPet(
+    @Body()
+    createPetDto: CreatePetDto,
+    @Res({ passthrough: true })
+    response: ResLocals.FirebaseAuthenticatedRequest,
+  ) {
+    const user_id = response.locals.user_id;
+    createPetDto.user_id = user_id;
+
+    const pet = await this.petService.create(createPetDto);
+
+    return {
+      message: 'Create pet succeed',
+      pet,
+    };
+  }
+
+  @UseGuards(PetOwnershipGuard)
+  @HttpCode(HttpStatus.OK)
+  @Delete(ROUTES.DELETE)
+  @ApiAppSuccessResponse(EmptyDto)
+  async deletePet(@Param(REQUEST_PARAM.ENTITY_ID) pet_id: string) {
+    const pet = await this.petService.findOne(pet_id);
+    await this.petService.remove(pet_id);
+    await this.petService.deleteAvatarImage(pet.avatar.file_name);
+
+    return {
+      message: `Delete pet_id ${pet_id} succeed`,
+    };
+  }
+
+  @UseGuards(PetOwnershipGuard)
+  @HttpCode(HttpStatus.OK)
+  @Get(ROUTES.GET)
+  @ApiAppSuccessResponse(Pet, 'pet')
+  async getPet(@Param(REQUEST_PARAM.ENTITY_ID) pet_id: string) {
+    const pet = await this.petService.findOne(pet_id);
+
+    return {
+      message: 'Get pet succeed',
+      pet,
+    };
+  }
+
+  @Get(ROUTES.LIST)
   @HttpCode(HttpStatus.OK)
   @ApiAppSuccessResponseArrayData(Pet)
   async listPet(
@@ -57,72 +122,10 @@ export class PetController {
     };
   }
 
-  @Post()
-  @HttpCode(HttpStatus.CREATED)
-  @ApiAppSuccessResponse(Pet, 'pet')
-  async createPet(
-    @Body()
-    createPetDto: CreatePetDto,
-    @Res({ passthrough: true })
-    response: ResLocals.FirebaseAuthenticatedRequest,
-  ) /*: Promise<ControllerReturn.CrudCompletedMessage<Pet & PetId>> */ {
-    const user_id = response.locals.user_id;
-    createPetDto.user_id = user_id;
-
-    const pet = await this.petService.create(createPetDto);
-
-    return {
-      message: 'Create pet succeed',
-      pet,
-    };
-  }
-
   @UseGuards(PetOwnershipGuard)
+  @Post(ROUTES.UPLOAD_AVATAR)
   @HttpCode(HttpStatus.OK)
-  @Get(':pet_id')
-  @ApiAppSuccessResponse(Pet, 'pet')
-  async getPet(@Param('pet_id') pet_id: string) {
-    const pet = await this.petService.findOne(pet_id);
-
-    return {
-      message: 'Get pet succeed',
-      pet,
-    };
-  }
-
-  @UseGuards(PetOwnershipGuard)
-  @HttpCode(HttpStatus.OK)
-  @Patch(':pet_id')
-  @ApiAppSuccessResponse(Pet, 'pet')
-  async updatePet(
-    @Param('pet_id') pet_id: string,
-    @Body()
-    updatePetDto: UpdatePetDto,
-  ) {
-    const updatedData = await this.petService.update(pet_id, updatePetDto);
-
-    return {
-      message: 'Update pet succeed',
-      pet: updatedData,
-    };
-  }
-
-  @UseGuards(PetOwnershipGuard)
-  @HttpCode(HttpStatus.OK)
-  @Delete(':pet_id')
-  @ApiAppSuccessResponse(EmptyDto)
-  async deletePet(@Param('pet_id') pet_id: string) {
-    await this.petService.remove(pet_id);
-
-    return {
-      message: `Delete pet_id ${pet_id} succeed`,
-    };
-  }
-
-  @UseGuards(PetOwnershipGuard)
-  @Post(':pet_id/avatar')
-  @HttpCode(HttpStatus.OK)
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(FileInterceptor(REQUEST_PARAM.FILE_FIELD_NAME))
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     description: 'A image of a pet',
@@ -152,7 +155,7 @@ export class PetController {
     file: Express.Multer.File,
     @Res({ passthrough: true })
     response: ResLocals.FirebaseAuthenticatedRequest,
-    @Param('pet_id') pet_id: string,
+    @Param(REQUEST_PARAM.ENTITY_ID) pet_id: string,
   ) {
     /**
      * File temporary store is out side of try block
@@ -165,13 +168,13 @@ export class PetController {
       const user_id = response.locals.user_id;
 
       const fileData = await this.petService.uploadAvatarImage({
-        file_name: TEMP_FILE_NAME,
         contentType: file.mimetype,
-        fileAbsolutePath: TEMP_FILE_PATH,
         customMetadata: {
-          user_id,
           pet_id: pet_id,
+          user_id,
         },
+        file_name: TEMP_FILE_NAME,
+        fileAbsolutePath: TEMP_FILE_PATH,
       });
 
       const pet = await this.petService.findOne(pet_id);
@@ -193,5 +196,22 @@ export class PetController {
     } finally {
       await fs.rm(TEMP_FILE_PATH);
     }
+  }
+
+  @UseGuards(PetOwnershipGuard)
+  @HttpCode(HttpStatus.OK)
+  @Patch(ROUTES.UPDATE)
+  @ApiAppSuccessResponse(Pet, 'pet')
+  async updatePet(
+    @Param(REQUEST_PARAM.ENTITY_ID) pet_id: string,
+    @Body()
+    updatePetDto: UpdatePetDto,
+  ) {
+    const updatedData = await this.petService.update(pet_id, updatePetDto);
+
+    return {
+      message: 'Update pet succeed',
+      pet: updatedData,
+    };
   }
 }

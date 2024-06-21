@@ -1,7 +1,8 @@
-import { IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { IGeolocationRes, ITravelAssisstantReponse } from './llm.type';
+import { IsString } from 'class-validator';
 import { PetDiaryNS } from 'src/interfaces/entities/pet-diary.interface';
+
+import { IGeolocationRes, ITravelAssisstantReponse } from './llm.type';
 
 export class TravelAssitantQueryDto {
   @IsString()
@@ -21,10 +22,10 @@ class GeolocationResDto implements IGeolocationRes {
 
 export class TravelAssisstantResDto implements ITravelAssisstantReponse {
   @ApiProperty()
-  location: GeolocationResDto;
+  answer: string;
 
   @ApiProperty()
-  answer: string;
+  location: GeolocationResDto;
 }
 
 class PetEmotionDto implements PetDiaryNS.IPetEmotion {

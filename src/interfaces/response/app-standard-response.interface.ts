@@ -1,5 +1,5 @@
 export interface IAppStandardReponseFormat<T> {
-  message: string;
   data?: T;
+  message: string;
   status: number | string;
 }

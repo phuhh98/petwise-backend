@@ -2,10 +2,10 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class GenericSuccessResponseDto<TData> {
   @ApiProperty()
-  message: string;
+  data: TData;
 
   @ApiProperty()
-  data: TData;
+  message: string;
 
   @ApiProperty()
   status: number;
@@ -13,10 +13,10 @@ export class GenericSuccessResponseDto<TData> {
 
 export class ErrorResponseDto {
   @ApiProperty()
-  message: string;
+  error: string;
 
   @ApiProperty()
-  error: string;
+  message: string;
 
   @ApiProperty()
   status: number;

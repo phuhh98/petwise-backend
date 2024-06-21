@@ -1,7 +1,9 @@
+import { StringOutputParser } from '@langchain/core/output_parsers';
 import { RunnableMap } from '@langchain/core/runnables';
 import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
 import { Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { ProviderTokens } from 'src/common/constants/provider-token.constant';
 
 import { geolocationParser } from './langchain/gemini_tools/geolocationParser';
 import { petDiaryJsonParser } from './langchain/gemini_tools/petDiaryJsonParser';
@@ -13,10 +15,8 @@ import {
   petProfileBuilderPrompt,
   travelAssistantPrompt,
 } from './langchain/prompts';
-import { petProfilebuilderHumanMessage } from './langchain/prompts/messageComponents/petProfileBuilderPrompts';
-import { StringOutputParser } from '@langchain/core/output_parsers';
-import { ProviderTokens } from 'src/common/constants/provider-token.constant';
 import { petDiaryBuilderHumanMessage } from './langchain/prompts/messageComponents/petDiaryBuilderPrompts';
+import { petProfilebuilderHumanMessage } from './langchain/prompts/messageComponents/petProfileBuilderPrompts';
 import {
   IGeolocationRes,
   IPetDiaryBuilderReponse,
@@ -31,21 +31,6 @@ export class LLMService {
   private readonly configService: ConfigService<NodeJS.ProcessEnv>;
 
   private llmModelSingleton: ChatGoogleGenerativeAI;
-
-  get geminiModel() {
-    if (!this.llmModelSingleton) {
-      this.llmModelSingleton = new ChatGoogleGenerativeAI({
-        apiKey:
-          this.configService.get<NodeJS.ProcessEnv['GEMINI_API_KEY']>(
-            'GEMINI_API_KEY',
-          ),
-        maxOutputTokens: 2048,
-        model: 'gemini-1.5-flash',
-        // verbose: true,
-      });
-    }
-    return this.llmModelSingleton;
-  }
 
   async geolocation(question: string) {
     const geolocationChain = geolocationPrompt
@@ -64,8 +49,8 @@ export class LLMService {
       ITravelAssisstantQuery,
       ITravelAssisstantReponse
     >({
-      location: geolocationChain,
       answer: travelAssitantChain,
+      location: geolocationChain,
     });
 
     return await master.invoke({ question });
@@ -112,5 +97,20 @@ export class LLMService {
     return await petProfileBuilderChain.invoke({
       message: petProfilebuilderHumanMessage({ fileUri, mimeType }),
     });
+  }
+
+  get geminiModel() {
+    if (!this.llmModelSingleton) {
+      this.llmModelSingleton = new ChatGoogleGenerativeAI({
+        apiKey:
+          this.configService.get<NodeJS.ProcessEnv['GEMINI_API_KEY']>(
+            'GEMINI_API_KEY',
+          ),
+        maxOutputTokens: 2048,
+        model: 'gemini-1.5-flash',
+        // verbose: true,
+      });
+    }
+    return this.llmModelSingleton;
   }
 }

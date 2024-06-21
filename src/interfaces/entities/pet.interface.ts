@@ -1,36 +1,36 @@
 export interface IPet {
-  id: string;
-  user_id: string;
-  name: string;
-  bio?: string;
   avatar?: IUploadedFile;
+  bio?: string;
+  id: string;
+  name: string;
   profile?: PetProfileNS.IPetProfile;
+  user_id: string;
 }
 
 export interface IUploadedFile {
-  file_name: string;
   file_id: string;
+  file_name: string;
   public_url: string;
 }
 
 export namespace PetProfileNS {
   export interface IPetProfile {
-    type: string;
+    appearance: IPetAppearance;
     breed: string;
     description: string;
-    appearance: IPetAppearance;
-    temperament: IPetTemperament;
-    health: IPetHealth;
-    grooming: IPetGrooming;
     exercise: IPetExercise;
+    grooming: IPetGrooming;
+    health: IPetHealth;
+    temperament: IPetTemperament;
+    type: string;
   }
 
   export interface IPetAppearance {
-    size: string;
+    body: IPetBody;
     coat: IPetCoating;
     head: IPetHead;
-    body: IPetBody;
     legs: string;
+    size: string;
   }
 
   export interface IPetBody {

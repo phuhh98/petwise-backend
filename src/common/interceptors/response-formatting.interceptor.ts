@@ -20,8 +20,8 @@ export class ResponseFormattingInterceptor<T>
     return next.handle().pipe(
       map((data) => {
         return {
-          message: data.message ?? '',
           data: delete data.message && (data.data ?? data),
+          message: data.message ?? '',
           status: context.switchToHttp().getResponse<Response>().statusCode,
         };
       }),

@@ -10,28 +10,24 @@ export const petProfileJsonParser: FunctionDeclaration = {
   parameters: {
     description: 'object which contains detail information from pet breed',
     properties: {
-      type: {
-        description: 'type of pet - animal type',
-        properties: {},
-        type: FunctionDeclarationSchemaType.STRING,
-      },
-      breed: {
-        description: 'the pet breed',
-        properties: {},
-        type: FunctionDeclarationSchemaType.STRING,
-      },
-      description: {
-        description: 'A brief description of the pet breed',
-        properties: {},
-        type: FunctionDeclarationSchemaType.STRING,
-      },
       appearance: {
         description: 'key base info about the pet appearance',
         properties: {
-          size: {
-            description: 'Size of the pet, coulbe Small, Medium, Large..etc',
-            properties: {},
-            type: FunctionDeclarationSchemaType.STRING,
+          body: {
+            description: "pet's body appearance",
+            properties: {
+              build: {
+                description: 'body build',
+                properties: {},
+                type: FunctionDeclarationSchemaType.STRING,
+              },
+              tail: {
+                description: 'tail size, shape, and furry state',
+                properties: {},
+                type: FunctionDeclarationSchemaType.STRING,
+              },
+            },
+            type: FunctionDeclarationSchemaType.OBJECT,
           },
           coat: {
             description: 'description related to its fur or skin',
@@ -52,11 +48,6 @@ export const petProfileJsonParser: FunctionDeclaration = {
           head: {
             description: "pet's head appearance",
             properties: {
-              shape: {
-                description: 'Shape of the pet head',
-                properties: {},
-                type: FunctionDeclarationSchemaType.STRING,
-              },
               ears: {
                 description: 'Ear shape description',
                 properties: {},
@@ -72,19 +63,8 @@ export const petProfileJsonParser: FunctionDeclaration = {
                 properties: {},
                 type: FunctionDeclarationSchemaType.STRING,
               },
-            },
-            type: FunctionDeclarationSchemaType.OBJECT,
-          },
-          body: {
-            description: "pet's body appearance",
-            properties: {
-              build: {
-                description: 'body build',
-                properties: {},
-                type: FunctionDeclarationSchemaType.STRING,
-              },
-              tail: {
-                description: 'tail size, shape, and furry state',
+              shape: {
+                description: 'Shape of the pet head',
                 properties: {},
                 type: FunctionDeclarationSchemaType.STRING,
               },
@@ -93,6 +73,75 @@ export const petProfileJsonParser: FunctionDeclaration = {
           },
           legs: {
             description: 'size of its legs',
+            properties: {},
+            type: FunctionDeclarationSchemaType.STRING,
+          },
+          size: {
+            description: 'Size of the pet, coulbe Small, Medium, Large..etc',
+            properties: {},
+            type: FunctionDeclarationSchemaType.STRING,
+          },
+        },
+        type: FunctionDeclarationSchemaType.OBJECT,
+      },
+      breed: {
+        description: 'the pet breed',
+        properties: {},
+        type: FunctionDeclarationSchemaType.STRING,
+      },
+      description: {
+        description: 'A brief description of the pet breed',
+        properties: {},
+        type: FunctionDeclarationSchemaType.STRING,
+      },
+      error: {
+        description:
+          'Error message from prompt when it is out of scope of this prompt',
+        properties: {},
+        type: FunctionDeclarationSchemaType.STRING,
+      },
+      exercise: {
+        description: 'pet and owners shared activities',
+        properties: {
+          needs: {
+            description: 'Suggest activity to make the pet happy',
+            properties: {},
+            type: FunctionDeclarationSchemaType.STRING,
+          },
+          suitable_for: {
+            description: 'Suggest kind owners to have this pet breed',
+            properties: {},
+            type: FunctionDeclarationSchemaType.STRING,
+          },
+        },
+        type: FunctionDeclarationSchemaType.OBJECT,
+      },
+      grooming: {
+        description: 'pet and owners shared activities',
+        properties: {
+          bathing: {
+            description: 'how often should the owner let the pet takes a bath',
+            properties: {},
+            type: FunctionDeclarationSchemaType.STRING,
+          },
+          frequency: {
+            description: 'frequency to take care of the pet',
+            properties: {},
+            type: FunctionDeclarationSchemaType.STRING,
+          },
+        },
+        type: FunctionDeclarationSchemaType.OBJECT,
+      },
+      health: {
+        description: "common breed's health info",
+        properties: {
+          common_health_issues: {
+            description: 'common health issue with this breed',
+            properties: {},
+            type: FunctionDeclarationSchemaType.STRING,
+          },
+          lifespan: {
+            description: 'the breed general life span',
             properties: {},
             type: FunctionDeclarationSchemaType.STRING,
           },
@@ -125,57 +174,8 @@ export const petProfileJsonParser: FunctionDeclaration = {
         },
         type: FunctionDeclarationSchemaType.OBJECT,
       },
-      health: {
-        description: "common breed's health info",
-        properties: {
-          common_health_issues: {
-            description: 'common health issue with this breed',
-            properties: {},
-            type: FunctionDeclarationSchemaType.STRING,
-          },
-          lifespan: {
-            description: 'the breed general life span',
-            properties: {},
-            type: FunctionDeclarationSchemaType.STRING,
-          },
-        },
-        type: FunctionDeclarationSchemaType.OBJECT,
-      },
-      grooming: {
-        description: 'pet and owners shared activities',
-        properties: {
-          bathing: {
-            description: 'how often should the owner let the pet takes a bath',
-            properties: {},
-            type: FunctionDeclarationSchemaType.STRING,
-          },
-          frequency: {
-            description: 'frequency to take care of the pet',
-            properties: {},
-            type: FunctionDeclarationSchemaType.STRING,
-          },
-        },
-        type: FunctionDeclarationSchemaType.OBJECT,
-      },
-      exercise: {
-        description: 'pet and owners shared activities',
-        properties: {
-          needs: {
-            description: 'Suggest activity to make the pet happy',
-            properties: {},
-            type: FunctionDeclarationSchemaType.STRING,
-          },
-          suitable_for: {
-            description: 'Suggest kind owners to have this pet breed',
-            properties: {},
-            type: FunctionDeclarationSchemaType.STRING,
-          },
-        },
-        type: FunctionDeclarationSchemaType.OBJECT,
-      },
-      error: {
-        description:
-          'Error message from prompt when it is out of scope of this prompt',
+      type: {
+        description: 'type of pet - animal type',
         properties: {},
         type: FunctionDeclarationSchemaType.STRING,
       },

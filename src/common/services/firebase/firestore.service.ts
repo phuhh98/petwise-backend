@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { CollectionReference, getFirestore } from 'firebase-admin/firestore';
+
 import app from '../../configs/firebase.config';
 
 @Injectable()

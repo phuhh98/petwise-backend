@@ -2,8 +2,8 @@ import { IFindManyReturnFormat } from 'src/interfaces/services/find-many-return.
 
 export interface Write<T> {
   create(item: T | any): Promise<T>;
-  update(id: string, item: Partial<T>): Promise<T>;
   remove(id: string): Promise<boolean>;
+  update(id: string, item: Partial<T>): Promise<T>;
 }
 
 export interface Read<T> {

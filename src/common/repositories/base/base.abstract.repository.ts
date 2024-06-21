@@ -1,5 +1,3 @@
-import { IBaseEntity } from 'src/interfaces/entities/common.interface';
-import { IBaseRepository } from './base.interface.repository';
 import {
   CollectionReference,
   FieldPath,
@@ -7,7 +5,10 @@ import {
   OrderByDirection,
   WhereFilterOp,
 } from 'firebase-admin/firestore';
+import { IBaseEntity } from 'src/interfaces/entities/common.interface';
 import { IFindManyReturnFormat } from 'src/interfaces/services/find-many-return.interface';
+
+import { IBaseRepository } from './base.interface.repository';
 
 export abstract class BaseRepositoryAbstract<T extends IBaseEntity>
   implements IBaseRepository<T>
@@ -40,33 +41,19 @@ export abstract class BaseRepositoryAbstract<T extends IBaseEntity>
     throw new Error(`Error during create ${this.collectionName}`);
   }
 
-  /**
-   * Throw Error on Not Found entity
-   * @param id
-   * @returns Promise<T>
-   */
-  async findOneById(id: string): Promise<T> {
-    const docRef = this.collection.doc(id);
-    const petData = (await docRef.get()).data();
-    if (!!petData) {
-      return { ...petData, id: docRef.id } as T;
-    }
-    throw new Error(`Can not find ${this.collectionName} with id ${id}`);
-  }
-
   async findAll(
     condition: {
-      fieldPath: string | FieldPath;
+      fieldPath: FieldPath | string;
       opStr: WhereFilterOp;
       value: unknown;
     }[],
     options?: {
-      orderBy?: {
-        fieldPath: string | FieldPath;
-        directionStr?: OrderByDirection;
-      };
       limit?: number;
       offSet?: number;
+      orderBy?: {
+        directionStr?: OrderByDirection;
+        fieldPath: FieldPath | string;
+      };
     },
   ): Promise<IFindManyReturnFormat<T>> {
     let query: ReturnType<CollectionReference<Omit<T, 'id'>>['where']>;
@@ -119,6 +106,26 @@ export abstract class BaseRepositoryAbstract<T extends IBaseEntity>
   }
 
   /**
+   * Throw Error on Not Found entity
+   * @param id
+   * @returns Promise<T>
+   */
+  async findOneById(id: string): Promise<T> {
+    const docRef = this.collection.doc(id);
+    const petData = (await docRef.get()).data();
+    if (!!petData) {
+      return { ...petData, id: docRef.id } as T;
+    }
+    throw new Error(`Can not find ${this.collectionName} with id ${id}`);
+  }
+
+  async permanentlyDelete(id: string): Promise<boolean> {
+    const docRef = this.collection.doc(id);
+    await docRef.delete();
+    return true;
+  }
+
+  /**
    * Throw Error on internal operation Error
    * @param id
    * @param dto
@@ -138,11 +145,5 @@ export abstract class BaseRepositoryAbstract<T extends IBaseEntity>
     }
 
     throw new Error(`Error during update ${this.collectionName} id ${id}`);
-  }
-
-  async permanentlyDelete(id: string): Promise<boolean> {
-    const docRef = this.collection.doc(id);
-    await docRef.delete();
-    return true;
   }
 }

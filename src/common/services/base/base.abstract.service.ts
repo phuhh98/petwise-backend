@@ -1,7 +1,8 @@
-import { IBaseEntity } from 'src/interfaces/entities/common.interface';
-import { IBaseService } from './base.interface.service';
 import { IBaseRepository } from 'src/common/repositories/base/base.interface.repository';
+import { IBaseEntity } from 'src/interfaces/entities/common.interface';
 import { IFindManyReturnFormat } from 'src/interfaces/services/find-many-return.interface';
+
+import { IBaseService } from './base.interface.service';
 
 export abstract class BaseServiceAbstract<T extends IBaseEntity>
   implements IBaseService<T>
@@ -22,11 +23,11 @@ export abstract class BaseServiceAbstract<T extends IBaseEntity>
     return await this.repository.findOneById(id);
   }
 
-  async update(id: string, update_dto: Partial<T>) {
-    return await this.repository.update(id, update_dto);
-  }
-
   async remove(id: string) {
     return await this.repository.permanentlyDelete(id);
+  }
+
+  async update(id: string, update_dto: Partial<T>) {
+    return await this.repository.update(id, update_dto);
   }
 }

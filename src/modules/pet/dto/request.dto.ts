@@ -1,4 +1,5 @@
 import { OmitType, PartialType } from '@nestjs/swagger';
+
 import { Pet } from './pet.dto';
 
 export class CreatePetDto extends OmitType(Pet, ['id', 'avatar']) {}

@@ -1,14 +1,15 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { getStorage } from 'firebase-admin/storage';
-import app from '../../configs/firebase.config';
 import { ConfigService } from '@nestjs/config';
+import { getStorage } from 'firebase-admin/storage';
 import { ProviderTokens } from 'src/common/constants/provider-token.constant';
+
+import app from '../../configs/firebase.config';
 
 @Injectable()
 export class FirestorageService {
-  private readonly storage = getStorage(app);
   @Inject(ProviderTokens['CONFIG_SERVICE'])
   private readonly configService: ConfigService<NodeJS.ProcessEnv>;
+  private readonly storage = getStorage(app);
 
   /**
    * Currently using free account to no custom bucket then =)))

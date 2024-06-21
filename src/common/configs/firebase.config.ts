@@ -1,4 +1,5 @@
-import { initializeApp, cert, ServiceAccount } from 'firebase-admin/app';
+import { ServiceAccount, cert, initializeApp } from 'firebase-admin/app';
+
 import firbaseServiceAccount from './firebase.keys.json';
 
 const app = initializeApp({

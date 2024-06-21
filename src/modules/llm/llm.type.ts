@@ -10,8 +10,8 @@ export interface IGeolocationRes {
 }
 
 export interface ITravelAssisstantReponse {
-  location: IGeolocationRes;
   answer: string;
+  location: IGeolocationRes;
 }
 
 export interface ITravelAssisstantQuery {

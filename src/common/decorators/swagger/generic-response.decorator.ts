@@ -1,16 +1,16 @@
-import { applyDecorators, Type } from '@nestjs/common';
+import { Type, applyDecorators } from '@nestjs/common';
 import { ApiExtraModels, ApiOkResponse, getSchemaPath } from '@nestjs/swagger';
+
 import { GenericSuccessResponseDto } from '../../dto/app-response.dto';
 
 export const ApiAppSuccessResponse = <TModel extends Type<any>>(
   model: TModel,
-  dataSubFieldName: string | null = null,
+  dataSubFieldName: null | string = null,
 ) => {
   return applyDecorators(
     ApiExtraModels(GenericSuccessResponseDto, model),
     ApiOkResponse({
       schema: {
-        title: `SuccessResponseFor${model.name}`,
         allOf: [
           { $ref: getSchemaPath(GenericSuccessResponseDto) },
           {
@@ -30,6 +30,7 @@ export const ApiAppSuccessResponse = <TModel extends Type<any>>(
             },
           },
         ],
+        title: `SuccessResponseFor${model.name}`,
       },
     }),
   );
@@ -42,18 +43,18 @@ export const ApiAppSuccessResponseArrayData = <TModel extends Type<any>>(
     ApiExtraModels(GenericSuccessResponseDto, model),
     ApiOkResponse({
       schema: {
-        title: `SuccessResponseFor${model.name}`,
         allOf: [
           { $ref: getSchemaPath(GenericSuccessResponseDto) },
           {
             properties: {
               data: {
-                type: 'array',
                 items: { $ref: getSchemaPath(model) },
+                type: 'array',
               },
             },
           },
         ],
+        title: `SuccessResponseFor${model.name}`,
       },
     }),
   );

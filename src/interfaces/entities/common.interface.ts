@@ -3,5 +3,5 @@ export interface IBaseEntity {
 }
 
 export interface IDataWithError {
-  error: string | Error;
+  error: Error | string;
 }

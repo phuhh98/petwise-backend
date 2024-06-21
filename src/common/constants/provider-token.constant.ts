@@ -1,5 +1,5 @@
 export enum ProviderTokens {
+  'CONFIG_SERVICE' = 'CONFIG_SERVICE',
   // 'FIRESTORE' = 'FIRESTORE',
   'FIREBASE_AUTH' = 'FIREBASE_AUTH',
-  'CONFIG_SERVICE' = 'CONFIG_SERVICE',
 }

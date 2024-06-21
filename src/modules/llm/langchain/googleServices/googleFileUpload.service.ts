@@ -10,16 +10,6 @@ export class GooleAIFileServiceWrapper {
 
   private fileManagerSingleton: GoogleAIFileManager;
 
-  get fileManager() {
-    if (!this.fileManagerSingleton) {
-      this.fileManagerSingleton = new GoogleAIFileManager(
-        this.configService.get('GEMINI_API_KEY'),
-      );
-    }
-
-    return this.fileManagerSingleton;
-  }
-
   public async deleteFile(fileId: string) {
     return await this.fileManager.deleteFile(fileId);
   }
@@ -44,5 +34,15 @@ export class GooleAIFileServiceWrapper {
       mimeType,
       name,
     });
+  }
+
+  get fileManager() {
+    if (!this.fileManagerSingleton) {
+      this.fileManagerSingleton = new GoogleAIFileManager(
+        this.configService.get('GEMINI_API_KEY'),
+      );
+    }
+
+    return this.fileManagerSingleton;
   }
 }

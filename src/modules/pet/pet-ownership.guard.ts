@@ -1,13 +1,14 @@
 import {
-  Injectable,
   CanActivate,
   ExecutionContext,
+  Injectable,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { PetService } from './pet.service';
 import { Request } from 'express';
 import { ResLocals } from 'src/interfaces/express.interface';
+
+import { PetService } from './pet.service';
 
 /**
  * Route guard to validate user ownership of pet base on :pet_id request nvm route param

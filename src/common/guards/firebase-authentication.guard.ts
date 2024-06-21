@@ -15,6 +15,11 @@ export class FirebaseAuthenticationGuard implements CanActivate {
   @Inject(ProviderTokens['FIREBASE_AUTH'])
   private readonly authService: FirebaseAuthService;
 
+  private extractTokenFromHeader(request: Request): string | undefined {
+    const [type, token] = request.headers.authorization?.split(' ') ?? [];
+    return type === 'Bearer' ? token : undefined;
+  }
+
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
     const response = context
@@ -36,10 +41,5 @@ export class FirebaseAuthenticationGuard implements CanActivate {
     }
 
     return true;
-  }
-
-  private extractTokenFromHeader(request: Request): string | undefined {
-    const [type, token] = request.headers.authorization?.split(' ') ?? [];
-    return type === 'Bearer' ? token : undefined;
   }
 }
