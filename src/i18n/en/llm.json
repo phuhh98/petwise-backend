@@ -1,0 +1,12 @@
+{
+  "videoProcessingFailed": "Video processing failed",
+  "videoUploadingFailed": "Video uploading failed",
+  "videoMetadataFailed": "Get Video metadata failed",
+
+  "imageProcessingFailed": "Image processing failed",
+  "imageUploadingFailed": "Image uploading failed",
+  "imageMetadataFailed": "Get Image metadata failed",
+
+  "generationError": "Error while generating content",
+  "generationSuccess": "Generate content successfully"
+}

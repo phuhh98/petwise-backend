@@ -6,7 +6,9 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  InternalServerErrorException,
   MaxFileSizeValidator,
+  NotFoundException,
   Param,
   ParseFilePipe,
   Patch,
@@ -18,14 +20,17 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
+import { I18nService } from 'nestjs-i18n';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import {
+  ApiAppCreateSuccessResponse,
   ApiAppSuccessResponse,
   ApiAppSuccessResponseArrayData,
 } from 'src/common/decorators/swagger/generic-response.decorator';
 import { EmptyDto, FileUploadDto } from 'src/common/dto/common-request.dto';
 import { FirebaseAuthenticationGuard } from 'src/common/guards/firebase-authentication.guard';
+import { I18nTranslations } from 'src/generated/i18n.generated';
 import { ResLocals } from 'src/interfaces/express.interface';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -36,6 +41,7 @@ import { PetOwnershipGuard } from './pet-ownership.guard';
 
 const CONTROLLER_ROUTE_PATH = 'pet';
 const ENTITY_PATH = 'pet';
+const ENTITY_NAME = 'Pet';
 
 enum REQUEST_PARAM {
   ENTITY_ID = 'pet_id',
@@ -56,11 +62,14 @@ enum ROUTES {
 @Controller(CONTROLLER_ROUTE_PATH)
 @UseGuards(FirebaseAuthenticationGuard)
 export class PetController {
-  constructor(private readonly petService: PetService) {}
+  constructor(
+    private readonly petService: PetService,
+    private readonly i18n: I18nService<I18nTranslations>,
+  ) {}
 
   @Post(ROUTES.CREATE)
   @HttpCode(HttpStatus.CREATED)
-  @ApiAppSuccessResponse(Pet, 'pet')
+  @ApiAppCreateSuccessResponse(Pet, 'pet')
   async createPet(
     @Body()
     createPetDto: CreatePetDto,
@@ -70,10 +79,16 @@ export class PetController {
     const user_id = response.locals.user_id;
     createPetDto.user_id = user_id;
 
-    const pet = await this.petService.create(createPetDto);
+    const pet = await this.petService.create(createPetDto).catch((_) => {
+      throw new InternalServerErrorException(
+        this.i18n.t('entity.createError', { args: { resource: ENTITY_NAME } }),
+      );
+    });
 
     return {
-      message: 'Create pet succeed',
+      message: this.i18n.t('entity.createSuccess', {
+        args: { resource: ENTITY_NAME },
+      }),
       pet,
     };
   }
@@ -83,12 +98,30 @@ export class PetController {
   @Delete(ROUTES.DELETE)
   @ApiAppSuccessResponse(EmptyDto)
   async deletePet(@Param(REQUEST_PARAM.ENTITY_ID) pet_id: string) {
-    const pet = await this.petService.findOne(pet_id);
-    await this.petService.remove(pet_id);
-    await this.petService.deleteAvatarImage(pet.avatar.file_name);
+    const pet = await this.petService.findOne(pet_id).catch((_) => {
+      throw new NotFoundException(this.i18n.t('entity.resourceNotFound'));
+    });
+
+    await this.petService.remove(pet_id).catch((_) => {
+      throw new InternalServerErrorException(
+        this.i18n.t('entity.deleteError', {
+          args: { resource_id: pet_id, resoure: ENTITY_NAME },
+        }),
+      );
+    });
+
+    await this.petService.deleteAvatarImage(pet.avatar.file_name).catch((_) => {
+      throw new InternalServerErrorException(
+        this.i18n.t('entity.deleteAssociatedFileError', {
+          args: { resource_id: pet_id, resoure: ENTITY_NAME },
+        }),
+      );
+    });
 
     return {
-      message: `Delete pet_id ${pet_id} succeed`,
+      message: this.i18n.t('entity.deleteSuccess', {
+        args: { resource: ENTITY_NAME, resource_id: pet_id },
+      }),
     };
   }
 
@@ -97,10 +130,14 @@ export class PetController {
   @Get(ROUTES.GET)
   @ApiAppSuccessResponse(Pet, 'pet')
   async getPet(@Param(REQUEST_PARAM.ENTITY_ID) pet_id: string) {
-    const pet = await this.petService.findOne(pet_id);
+    const pet = await this.petService.findOne(pet_id).catch((_) => {
+      throw new NotFoundException(this.i18n.t('entity.resourceNotFound'));
+    });
 
     return {
-      message: 'Get pet succeed',
+      message: this.i18n.t('entity.getResourceSuccess', {
+        args: { resource: ENTITY_NAME },
+      }),
       pet,
     };
   }
@@ -114,10 +151,24 @@ export class PetController {
   ) {
     const user_id = response.locals.user_id;
 
-    const pets = await this.petService.listPet(user_id);
+    const pets = await this.petService.listPet(user_id).catch((_) => {
+      throw new InternalServerErrorException(
+        this.i18n.t('entity.operationOnResourceError', {
+          args: {
+            operation: this.i18n.t('operation.list'),
+            resource: ENTITY_NAME,
+          },
+        }),
+      );
+    });
 
     return {
-      message: 'List pets succeed',
+      message: this.i18n.t('entity.operationSuccess', {
+        args: {
+          operation: this.i18n.t('operation.list'),
+          resource: ENTITY_NAME,
+        },
+      }),
       pets,
     };
   }
@@ -162,34 +213,75 @@ export class PetController {
      */
     const TEMP_FILE_NAME = `${uuidv4()}`;
     const TEMP_FILE_PATH = path.resolve(__dirname, TEMP_FILE_NAME);
-    await fs.writeFile(TEMP_FILE_PATH, file.buffer);
+    await fs.writeFile(TEMP_FILE_PATH, file.buffer).catch((_) => {
+      throw new InternalServerErrorException(this.i18n.t('app.preUploadError'));
+    });
 
     try {
       const user_id = response.locals.user_id;
 
-      const fileData = await this.petService.uploadAvatarImage({
-        contentType: file.mimetype,
-        customMetadata: {
-          pet_id: pet_id,
-          user_id,
-        },
-        file_name: TEMP_FILE_NAME,
-        fileAbsolutePath: TEMP_FILE_PATH,
-      });
+      const fileData = await this.petService
+        .uploadAvatarImage({
+          contentType: file.mimetype,
+          customMetadata: {
+            pet_id: pet_id,
+            user_id,
+          },
+          file_name: TEMP_FILE_NAME,
+          fileAbsolutePath: TEMP_FILE_PATH,
+        })
+        .catch((_) => {
+          throw new InternalServerErrorException(
+            this.i18n.t('entity.uploadAssociatedFileError', {
+              args: {
+                resource: ENTITY_NAME,
+                resource_id: pet_id,
+              },
+            }),
+          );
+        });
 
-      const pet = await this.petService.findOne(pet_id);
+      const pet = await this.petService.findOne(pet_id).catch((_) => {
+        throw new NotFoundException(this.i18n.t('entity.resourceNotFound'));
+      });
 
       // if file exist then delete before update
       if (!!pet.avatar?.file_id && !!pet.avatar?.file_name) {
-        await this.petService.deleteAvatarImage(pet.avatar.file_name);
+        await this.petService
+          .deleteAvatarImage(pet.avatar.file_name)
+          .catch((_) => {
+            throw new InternalServerErrorException(
+              this.i18n.t('entity.deleteAssociatedFileError', {
+                args: {
+                  resource: ENTITY_NAME,
+                  resource_id: pet_id,
+                },
+              }),
+            );
+          });
       }
 
       // then update record with new info
-      await this.petService.update(pet_id, { avatar: fileData });
+      await this.petService.update(pet_id, { avatar: fileData }).catch((_) => {
+        throw new InternalServerErrorException(
+          this.i18n.t('entity.operationOnResourceError', {
+            args: {
+              operation: this.i18n.t('operation.update'),
+              resource: ENTITY_NAME,
+            },
+          }),
+        );
+      });
 
       return {
-        data: { pet: await this.petService.findOne(pet_id) },
-        message: 'Update pet avatar succeed',
+        data: {
+          pet: await this.petService.findOne(pet_id).catch((_) => {
+            throw new NotFoundException(this.i18n.t('entity.resourceNotFound'));
+          }),
+        },
+        message: this.i18n.t('entity.uploadAssociatedFileSuccess', {
+          args: { resource: ENTITY_NAME, resource_id: pet_id },
+        }),
       };
     } catch (err) {
       throw err;
@@ -207,10 +299,26 @@ export class PetController {
     @Body()
     updatePetDto: UpdatePetDto,
   ) {
-    const updatedData = await this.petService.update(pet_id, updatePetDto);
+    const updatedData = await this.petService
+      .update(pet_id, updatePetDto)
+      .catch((_) => {
+        throw new InternalServerErrorException(
+          this.i18n.t('entity.operationOnResourceError', {
+            args: {
+              operation: this.i18n.t('operation.update'),
+              resource: ENTITY_NAME,
+            },
+          }),
+        );
+      });
 
     return {
-      message: 'Update pet succeed',
+      message: this.i18n.t('entity.operationSuccess', {
+        args: {
+          operation: this.i18n.t('operation.update'),
+          resource: ENTITY_NAME,
+        },
+      }),
       pet: updatedData,
     };
   }

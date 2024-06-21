@@ -1,6 +1,8 @@
 import { Global, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_INTERCEPTOR } from '@nestjs/core';
+import { AcceptLanguageResolver, I18nModule, QueryResolver } from 'nestjs-i18n';
+import path from 'node:path';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -33,6 +35,21 @@ import { PetModule } from './modules/pet/pet.module';
     ConfigModule.forRoot({
       envFilePath: ['.local.env'],
       isGlobal: true,
+    }),
+    I18nModule.forRoot({
+      fallbackLanguage: 'en',
+      loaderOptions: {
+        path: path.join(__dirname, '/i18n/'),
+        watch: true,
+      },
+      resolvers: [
+        { options: ['lang'], use: QueryResolver },
+        AcceptLanguageResolver,
+      ],
+      typesOutputPath: path.join(
+        __dirname,
+        '../src/generated/i18n.generated.ts',
+      ),
     }),
     LLMModule,
     PetModule,

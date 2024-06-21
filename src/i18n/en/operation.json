@@ -1,0 +1,7 @@
+{
+  "create": "Create",
+  "delete": "Delete",
+  "update": "Update",
+  "list": "List",
+  "get": "Get"
+}

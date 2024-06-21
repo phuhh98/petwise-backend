@@ -19,9 +19,11 @@ export class ResponseFormattingInterceptor<T>
   ): Observable<IAppStandardReponseFormat<T>> {
     return next.handle().pipe(
       map((data) => {
+        const message = data.message?.toString() ?? '';
         return {
           data: delete data.message && (data.data ?? data),
-          message: data.message ?? '',
+          error: null,
+          message,
           status: context.switchToHttp().getResponse<Response>().statusCode,
         };
       }),

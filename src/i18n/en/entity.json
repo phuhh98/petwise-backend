@@ -1,0 +1,13 @@
+{
+  "resourceNotFound": "Resource not found",
+  "createError": "Error while creating {resource}",
+  "createSuccess": "{resource} created successfully",
+  "deleteSuccess": "Delete {resource} with id {resource_id} successfully",
+  "deleteError": "Error while deleting {resource} with id {resource_id}",
+  "deleteAssociatedFileError": "Error while deleting associated file to {resource} with id {resource_id}",
+  "uploadAssociatedFileError": "Error while upload associated file to {resource} with id {resource_id}",
+  "uploadAssociatedFileSuccess": "Upload associated file to {resource} with id {resource} successfully",
+  "getResourceSuccess": "Get {resource} successfully",
+  "operationOnResourceError": "Error while {operation} {resource}",
+  "operationSuccess": "{operation} {resource} successfully"
+}

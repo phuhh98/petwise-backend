@@ -1,8 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { IAppStandardReponseFormat } from 'src/interfaces/response/app-standard-response.interface';
 
-export class GenericSuccessResponseDto<TData> {
+export class SuccessResponseDto<T>
+  implements Omit<IAppStandardReponseFormat<T>, 'error'>
+{
   @ApiProperty()
-  data: TData;
+  data: T;
 
   @ApiProperty()
   message: string;
@@ -11,7 +14,9 @@ export class GenericSuccessResponseDto<TData> {
   status: number;
 }
 
-export class ErrorResponseDto {
+export class ErrorResponseDto
+  implements Omit<IAppStandardReponseFormat<null>, 'data'>
+{
   @ApiProperty()
   error: string;
 

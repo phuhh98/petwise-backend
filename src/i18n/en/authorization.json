@@ -1,0 +1,5 @@
+{
+  "authTokenIsMissing": "Authorization token is missing",
+  "invalidAuthToken": "Invalid Authorization token",
+  "dontHaveAccessRight": "You don't have access to this resource"
+}

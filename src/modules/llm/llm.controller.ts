@@ -5,20 +5,24 @@ import {
   FileTypeValidator,
   HttpCode,
   HttpStatus,
+  InternalServerErrorException,
   MaxFileSizeValidator,
   ParseFilePipe,
   Post,
+  UnprocessableEntityException,
   UploadedFile,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
+import { I18nService } from 'nestjs-i18n';
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import { ApiAppSuccessResponse } from 'src/common/decorators/swagger/generic-response.decorator';
 import { FileUploadDto } from 'src/common/dto/common-request.dto';
 import { FirebaseAuthenticationGuard } from 'src/common/guards/firebase-authentication.guard';
+import { I18nTranslations } from 'src/generated/i18n.generated';
 import { PetProfileDtoNS } from 'src/modules/pet/dto/pet.dto';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -50,6 +54,7 @@ export class LLMController {
   constructor(
     private readonly llmService: LLMService,
     private readonly googleFileService: GooleAIFileServiceWrapper,
+    private readonly i18n: I18nService<I18nTranslations>,
   ) {}
 
   @Post(ROUTES.PET_DIARY_BUILDER)
@@ -88,48 +93,86 @@ export class LLMController {
      */
     const TEMP_FILE_NAME = `${uuidv4()}`;
     const TEMP_FILE_PATH = path.resolve(__dirname, TEMP_FILE_NAME);
-    await fs.writeFile(TEMP_FILE_PATH, file.buffer);
+    await fs.writeFile(TEMP_FILE_PATH, file.buffer).catch((_) => {
+      throw new InternalServerErrorException(this.i18n.t('app.preUploadError'));
+    });
 
     try {
-      const fileUploadResult = await this.googleFileService.uploadFile({
-        displayName: file.originalname,
-        filePath: TEMP_FILE_PATH,
-        mimeType: file.mimetype,
-        name: TEMP_FILE_NAME,
-      });
+      const fileUploadResult = await this.googleFileService
+        .uploadFile({
+          displayName: file.originalname,
+          filePath: TEMP_FILE_PATH,
+          mimeType: file.mimetype,
+          name: TEMP_FILE_NAME,
+        })
+        .catch((_) => {
+          throw new InternalServerErrorException(
+            this.i18n.t('llm.videoUploadingFailed'),
+          );
+        });
       /**
        * Now have to check for file state
        * Possible file states are in the below url
        * https://ai.google.dev/api/rest/v1beta/files#state
        */
 
-      let fileMeta = await this.googleFileService.getFileMeta(
-        fileUploadResult.file.name,
-      );
+      let fileMeta = await this.googleFileService
+        .getFileMeta(fileUploadResult.file.name)
+        .catch((_) => {
+          throw new InternalServerErrorException(
+            this.i18n.t('llm.videoMetadataFailed'),
+          );
+        });
+
       while (fileMeta.state === FileState.PROCESSING) {
         process.stdout.write('.');
         // Sleep for 5 seconds
         await new Promise((resolve) => setTimeout(resolve, 5_000));
         // Fetch the file from the API again
-        fileMeta = await this.googleFileService.getFileMeta(
-          fileUploadResult.file.name,
-        );
+        fileMeta = await this.googleFileService
+          .getFileMeta(fileUploadResult.file.name)
+          .catch((_) => {
+            throw new InternalServerErrorException(
+              this.i18n.t('llm.videoMetadataFailed'),
+            );
+          });
       }
 
       if (fileMeta.state === FileState.FAILED) {
-        throw new Error('Video processing failed.');
+        throw new UnprocessableEntityException(
+          this.i18n.t('llm.videoProcessingFailed'),
+        );
       }
 
-      const promptRes = await this.llmService.petDiaryBuilder({
-        fileUri: fileUploadResult.file.uri,
-        mimeType: file.mimetype,
-      });
+      const promptRes = await this.llmService
+        .petDiaryBuilder({
+          fileUri: fileUploadResult.file.uri,
+          mimeType: file.mimetype,
+        })
+        .catch((_) => {
+          throw new InternalServerErrorException(
+            this.i18n.t('llm.generationError'),
+          );
+        });
 
-      this.googleFileService.deleteFile(fileUploadResult.file.name);
+      await this.googleFileService
+        .deleteFile(fileUploadResult.file.name)
+        .catch((_) => {
+          throw new InternalServerErrorException(
+            this.i18n.t('app.clearResourceError'),
+          );
+        });
 
-      return { data: { analysis: promptRes }, message: 'Generation succeed' };
+      return {
+        data: { analysis: promptRes },
+        message: this.i18n.t('llm.generationSuccess'),
+      };
     } finally {
-      await fs.rm(TEMP_FILE_PATH);
+      await fs.rm(TEMP_FILE_PATH).catch((_) => {
+        throw new InternalServerErrorException(
+          this.i18n.t('app.clearResourceError'),
+        );
+      });
     }
   }
 
@@ -169,41 +212,72 @@ export class LLMController {
      */
     const TEMP_FILE_NAME = `${uuidv4()}`;
     const TEMP_FILE_PATH = path.resolve(__dirname, TEMP_FILE_NAME);
-    await fs.writeFile(TEMP_FILE_PATH, file.buffer);
+    await fs.writeFile(TEMP_FILE_PATH, file.buffer).catch((_) => {
+      throw new InternalServerErrorException(this.i18n.t('app.preUploadError'));
+    });
 
     try {
-      const fileUploadResult = await this.googleFileService.uploadFile({
-        displayName: file.originalname,
-        filePath: TEMP_FILE_PATH,
-        mimeType: file.mimetype,
-        name: TEMP_FILE_NAME,
-      });
+      const fileUploadResult = await this.googleFileService
+        .uploadFile({
+          displayName: file.originalname,
+          filePath: TEMP_FILE_PATH,
+          mimeType: file.mimetype,
+          name: TEMP_FILE_NAME,
+        })
+        .catch((_) => {
+          throw new InternalServerErrorException(
+            this.i18n.t('llm.imageUploadingFailed'),
+          );
+        });
 
-      let fileMeta = await this.googleFileService.getFileMeta(
-        fileUploadResult.file.name,
-      );
+      let fileMeta = await this.googleFileService
+        .getFileMeta(fileUploadResult.file.name)
+        .catch((_) => {
+          throw new InternalServerErrorException(
+            this.i18n.t('llm.imageMetadataFailed'),
+          );
+        });
+
       while (fileMeta.state === FileState.PROCESSING) {
         process.stdout.write('.');
         // Sleep for 1 seconds
         await new Promise((resolve) => setTimeout(resolve, 1_000));
         // Fetch the file from the API again
-        fileMeta = await this.googleFileService.getFileMeta(
-          fileUploadResult.file.name,
-        );
+        fileMeta = await this.googleFileService
+          .getFileMeta(fileUploadResult.file.name)
+          .catch((_) => {
+            throw new InternalServerErrorException(
+              this.i18n.t('llm.imageMetadataFailed'),
+            );
+          });
       }
 
       if (fileMeta.state === FileState.FAILED) {
-        throw new Error('Image processing failed.');
+        throw new UnprocessableEntityException(
+          this.i18n.t('llm.imageProcessingFailed'),
+        );
       }
 
-      const promptRes = await this.llmService.petProfileBuilder({
-        fileUri: fileUploadResult.file.uri,
-        mimeType: file.mimetype,
-      });
+      const promptRes = await this.llmService
+        .petProfileBuilder({
+          fileUri: fileUploadResult.file.uri,
+          mimeType: file.mimetype,
+        })
+        .catch((_) => {
+          throw new InternalServerErrorException(
+            this.i18n.t('llm.generationError'),
+          );
+        });
 
-      this.googleFileService.deleteFile(fileUploadResult.file.name);
+      this.googleFileService
+        .deleteFile(fileUploadResult.file.name)
+        .catch((_) => {
+          throw new InternalServerErrorException(
+            this.i18n.t('app.clearResourceError'),
+          );
+        });
 
-      return { data: promptRes, message: 'Generation succeed' };
+      return { data: promptRes, message: this.i18n.t('llm.generationSuccess') };
     } finally {
       await fs.rm(TEMP_FILE_PATH);
     }
@@ -214,8 +288,12 @@ export class LLMController {
   @ApiAppSuccessResponse(TravelAssisstantResDto)
   async travelAssistant(@Body() query: TravelAssitantQueryDto) {
     return {
-      data: await this.llmService.geolocation(query.question),
-      message: 'Generation succeed',
+      data: await this.llmService.geolocation(query.question).catch((_) => {
+        throw new InternalServerErrorException(
+          this.i18n.t('llm.generationError'),
+        );
+      }),
+      message: this.i18n.t('llm.generationSuccess'),
     };
   }
 }

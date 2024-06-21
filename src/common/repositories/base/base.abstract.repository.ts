@@ -23,22 +23,21 @@ export abstract class BaseRepositoryAbstract<T extends IBaseEntity>
     ) as CollectionReference<Omit<T, 'id'>>;
   }
 
-  /**
-   * Throw Error on Internal operation error
-   * @param dto
-   * @returns Promise<T>
-   */
+  private async isDocDataExist<T>(
+    docRef: FirebaseFirestore.DocumentReference<T>,
+  ): Promise<T> {
+    const data = (await docRef.get()).data();
+    if (!data) throw new Error('Resource does not exist');
+    return data;
+  }
+
   async create(dto: T | any): Promise<T> {
     const docRef = await this.collection.add(dto);
-    const createdDoc = (await docRef.get()).data();
-    if (createdDoc) {
-      return {
-        ...createdDoc,
-        id: docRef.id,
-      } as T;
-    }
-
-    throw new Error(`Error during create ${this.collectionName}`);
+    const createdDoc = await this.isDocDataExist(docRef);
+    return {
+      ...createdDoc,
+      id: docRef.id,
+    } as T;
   }
 
   async findAll(
@@ -96,7 +95,7 @@ export abstract class BaseRepositoryAbstract<T extends IBaseEntity>
 
     const docs = querySnapshot.docs.map((doc) => ({
       ...(doc.data() as T),
-      pet_id: doc.id,
+      id: doc.id,
     }));
 
     return {
@@ -105,18 +104,10 @@ export abstract class BaseRepositoryAbstract<T extends IBaseEntity>
     };
   }
 
-  /**
-   * Throw Error on Not Found entity
-   * @param id
-   * @returns Promise<T>
-   */
   async findOneById(id: string): Promise<T> {
     const docRef = this.collection.doc(id);
-    const petData = (await docRef.get()).data();
-    if (!!petData) {
-      return { ...petData, id: docRef.id } as T;
-    }
-    throw new Error(`Can not find ${this.collectionName} with id ${id}`);
+    const data = await this.isDocDataExist(docRef);
+    return { ...data, id: docRef.id } as T;
   }
 
   async permanentlyDelete(id: string): Promise<boolean> {
@@ -125,25 +116,16 @@ export abstract class BaseRepositoryAbstract<T extends IBaseEntity>
     return true;
   }
 
-  /**
-   * Throw Error on internal operation Error
-   * @param id
-   * @param dto
-   * @returns Promise<T>
-   */
   async update(id: string, dto: Partial<T>): Promise<T> {
     const docRef = this.collection.doc(id);
 
     await docRef.update({ ...dto });
 
-    const updatedData = (await docRef.get()).data();
-    if (updatedData) {
-      return {
-        ...updatedData,
-        id: docRef.id,
-      } as T;
-    }
+    const updatedData = await this.isDocDataExist(docRef);
 
-    throw new Error(`Error during update ${this.collectionName} id ${id}`);
+    return {
+      ...updatedData,
+      id: docRef.id,
+    } as T;
   }
 }

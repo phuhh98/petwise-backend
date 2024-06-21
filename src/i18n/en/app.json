@@ -1,0 +1,4 @@
+{
+  "preUploadError": "Error while preparing to upload your file(s)",
+  "clearResourceError": "Error while clearing your provided resource(s)"
+}

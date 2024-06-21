@@ -6,6 +6,8 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Request } from 'express';
+import { I18nService } from 'nestjs-i18n';
+import { I18nTranslations } from 'src/generated/i18n.generated';
 import { ResLocals } from 'src/interfaces/express.interface';
 
 import { PetService } from './pet.service';
@@ -17,7 +19,10 @@ import { PetService } from './pet.service';
  */
 @Injectable()
 export class PetOwnershipGuard implements CanActivate {
-  constructor(private readonly petService: PetService) {}
+  constructor(
+    private readonly petService: PetService,
+    private readonly i18n: I18nService<I18nTranslations>,
+  ) {}
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context
       .switchToHttp()
@@ -29,12 +34,14 @@ export class PetOwnershipGuard implements CanActivate {
     const user_id = response.locals.user_id;
     const pet_id = request.params.pet_id;
 
-    const pet = await this.petService.findOne(pet_id).catch((error) => {
-      throw new NotFoundException((error as Error).message);
+    const pet = await this.petService.findOne(pet_id).catch((_) => {
+      throw new NotFoundException(this.i18n.t('entity.resourceNotFound'));
     });
 
     if (pet.user_id !== user_id) {
-      throw new UnauthorizedException('You do not own this pet');
+      throw new UnauthorizedException(
+        this.i18n.t('authorization.dontHaveAccessRight'),
+      );
     }
 
     return true;
