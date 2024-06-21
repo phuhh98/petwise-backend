@@ -1,5 +1,6 @@
 import { Bucket } from '@google-cloud/storage';
 import { Injectable } from '@nestjs/common';
+import { UploadedFileDto } from 'src/common/dto/uploaded-file.dto';
 import { BaseRepositoryAbstract } from 'src/common/repositories/base/base.abstract.repository';
 import { IBaseRepository } from 'src/common/repositories/base/base.interface.repository';
 import { FirestorageService } from 'src/common/services/firebase/firebase-storage.service';
@@ -10,7 +11,6 @@ import {
   IAvatarUploadOptions,
   IPetRepository,
 } from './interfaces/pet.interface.repository';
-import { UploadedFileDto } from 'src/common/dto/uploaded-file.dto';
 
 const COLLECTION_NAME = 'pet';
 
@@ -19,8 +19,8 @@ export class PetRepository
   extends BaseRepositoryAbstract<IPet>
   implements IPetRepository
 {
-  private readonly bucket: Bucket;
   private readonly FILE_TYPE_META = 'pet_avatar_image';
+  private readonly bucket: Bucket;
   constructor(
     private readonly fireStoreService: FirestoreService,
     private readonly fireStorageService: FirestorageService,

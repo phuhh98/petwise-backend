@@ -19,6 +19,7 @@ import { ApiBearerAuth, ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { I18nService } from 'nestjs-i18n';
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
+import { REGEX_PATTERN } from 'src/common/constants/regex.constant';
 import { ApiAppSuccessResponse } from 'src/common/decorators/swagger/generic-response.decorator';
 import { FileUploadDto } from 'src/common/dto/common-request.dto';
 import { FirebaseAuthenticationGuard } from 'src/common/guards/firebase-authentication.guard';
@@ -33,7 +34,6 @@ import {
   TravelAssitantQueryDto,
 } from './llm.dto';
 import { LLMService } from './llm.service';
-import { REGEX_PATTERN } from 'src/common/constants/regex.constant';
 
 const CONTROLLER_ROUTE_PATH = 'llm';
 

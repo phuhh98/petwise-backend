@@ -23,9 +23,9 @@ export interface IImageUploadParams {
 }
 
 export interface IListDiaryParams {
-  values: {
-    user_id: string;
-    pet_id?: string;
-  };
   options?: QueryOptions;
+  values: {
+    pet_id?: string;
+    user_id: string;
+  };
 }

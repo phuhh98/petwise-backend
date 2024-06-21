@@ -23,6 +23,7 @@ import { ApiBearerAuth, ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { I18nService } from 'nestjs-i18n';
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { REGEX_PATTERN } from 'src/common/constants/regex.constant';
 import {
   ApiAppCreateSuccessResponse,
   ApiAppSuccessResponse,
@@ -38,7 +39,6 @@ import { Pet } from './dto/pet.dto';
 import { CreatePetDto, UpdatePetDto } from './dto/request.dto';
 import { PetService } from './pet.service';
 import { PetOwnershipGuard } from './pet-ownership.guard';
-import { REGEX_PATTERN } from 'src/common/constants/regex.constant';
 
 const CONTROLLER_ROUTE_PATH = 'pet';
 const ENTITY_PATH = 'pet';
@@ -87,10 +87,10 @@ export class PetController {
     });
 
     return {
+      [ENTITY_NAME]: pet,
       message: this.i18n.t('entity.createSuccess', {
         args: { resource: ENTITY_NAME },
       }),
-      [ENTITY_NAME]: pet,
     };
   }
 
@@ -144,10 +144,10 @@ export class PetController {
     });
 
     return {
+      [ENTITY_NAME]: pet,
       message: this.i18n.t('entity.getResourceSuccess', {
         args: { resource: ENTITY_NAME },
       }),
-      [ENTITY_NAME]: pet,
     };
   }
 
@@ -172,13 +172,46 @@ export class PetController {
     });
 
     return {
+      [`${ENTITY_NAME}s`]: pets,
       message: this.i18n.t('entity.operationSuccess', {
         args: {
           operation: this.i18n.t('operation.list'),
           resource: ENTITY_NAME,
         },
       }),
-      [`${ENTITY_NAME}s`]: pets,
+    };
+  }
+
+  @UseGuards(PetOwnershipGuard)
+  @HttpCode(HttpStatus.OK)
+  @Patch(ROUTES.UPDATE)
+  @ApiAppSuccessResponse(Pet, ENTITY_NAME)
+  async updatePet(
+    @Param(REQUEST_PARAM.ENTITY_ID) pet_id: string,
+    @Body()
+    updatePetDto: UpdatePetDto,
+  ) {
+    const updatedData = await this.petService
+      .update(pet_id, updatePetDto)
+      .catch((_) => {
+        throw new InternalServerErrorException(
+          this.i18n.t('entity.operationOnResourceError', {
+            args: {
+              operation: this.i18n.t('operation.update'),
+              resource: ENTITY_NAME,
+            },
+          }),
+        );
+      });
+
+    return {
+      [ENTITY_NAME]: updatedData,
+      message: this.i18n.t('entity.operationSuccess', {
+        args: {
+          operation: this.i18n.t('operation.update'),
+          resource: ENTITY_NAME,
+        },
+      }),
     };
   }
 
@@ -192,7 +225,7 @@ export class PetController {
     type: FileUploadDto,
   })
   @ApiAppSuccessResponse(Pet, ENTITY_NAME)
-  async petProfileBuilder(
+  async uploadPetAvatarImage(
     @UploadedFile(
       new ParseFilePipe({
         validators: [
@@ -297,38 +330,5 @@ export class PetController {
     } finally {
       await fs.rm(TEMP_FILE_PATH);
     }
-  }
-
-  @UseGuards(PetOwnershipGuard)
-  @HttpCode(HttpStatus.OK)
-  @Patch(ROUTES.UPDATE)
-  @ApiAppSuccessResponse(Pet, ENTITY_NAME)
-  async updatePet(
-    @Param(REQUEST_PARAM.ENTITY_ID) pet_id: string,
-    @Body()
-    updatePetDto: UpdatePetDto,
-  ) {
-    const updatedData = await this.petService
-      .update(pet_id, updatePetDto)
-      .catch((_) => {
-        throw new InternalServerErrorException(
-          this.i18n.t('entity.operationOnResourceError', {
-            args: {
-              operation: this.i18n.t('operation.update'),
-              resource: ENTITY_NAME,
-            },
-          }),
-        );
-      });
-
-    return {
-      message: this.i18n.t('entity.operationSuccess', {
-        args: {
-          operation: this.i18n.t('operation.update'),
-          resource: ENTITY_NAME,
-        },
-      }),
-      [ENTITY_NAME]: updatedData,
-    };
   }
 }

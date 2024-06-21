@@ -37,21 +37,21 @@ export namespace DiaryDtoNS {
 }
 
 export class Diary implements IDiary {
+  @IsObject()
   @ValidateNested()
-  @Type(() => UploadedFileDto)
-  image: UploadedFileDto;
+  @Type(() => DiaryDtoNS.DiaryGeneratedAnalysis)
+  analysis: DiaryDtoNS.DiaryGeneratedAnalysis;
 
   @IsString()
   id: string;
+
+  @ValidateNested()
+  @Type(() => UploadedFileDto)
+  image: UploadedFileDto;
 
   @IsString()
   pet_id: string;
 
   @IsString()
   user_id: string;
-
-  @IsObject()
-  @ValidateNested()
-  @Type(() => DiaryDtoNS.DiaryGeneratedAnalysis)
-  analysis: DiaryDtoNS.DiaryGeneratedAnalysis;
 }

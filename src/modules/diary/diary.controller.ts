@@ -23,6 +23,7 @@ import { ApiBearerAuth, ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { I18nService } from 'nestjs-i18n';
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { REGEX_PATTERN } from 'src/common/constants/regex.constant';
 import {
   ApiAppCreateSuccessResponse,
   ApiAppSuccessResponse,
@@ -34,16 +35,15 @@ import { I18nTranslations } from 'src/generated/i18n.generated';
 import { ResLocals } from 'src/interfaces/express.interface';
 import { v4 as uuidv4 } from 'uuid';
 
-import { DiaryOwnershipGuard } from './diary-ownership.guard';
 import { DiaryService } from './diary.service';
+import { DiaryOwnershipGuard } from './diary-ownership.guard';
+import { Diary } from './dto/diary.dto';
 import {
   CreateDiaryDto,
   ListDiaryDto,
   UpdateDiaryDto,
 } from './dto/request.dto';
-import { Diary } from './dto/diary.dto';
 import { PetPayloadOwnershipGuard } from './pet-payload-ownership.guard';
-import { REGEX_PATTERN } from 'src/common/constants/regex.constant';
 
 const CONTROLLER_ROUTE_PATH = 'diary';
 const ENTITY_PATH = 'diary';
@@ -77,7 +77,7 @@ export class DiaryController {
   @HttpCode(HttpStatus.CREATED)
   @UseGuards(PetPayloadOwnershipGuard)
   @ApiAppCreateSuccessResponse(Diary, ENTITY_NAME)
-  async createPet(
+  async createDiary(
     @Body()
     createDiaryDto: CreateDiaryDto,
     @Res({ passthrough: true })
@@ -95,10 +95,10 @@ export class DiaryController {
     console.log(diary);
 
     return {
+      [ENTITY_NAME]: diary,
       message: this.i18n.t('entity.createSuccess', {
         args: { resource: ENTITY_NAME },
       }),
-      [ENTITY_NAME]: diary,
     };
   }
 
@@ -150,10 +150,10 @@ export class DiaryController {
     });
 
     return {
+      [ENTITY_NAME]: diary,
       message: this.i18n.t('entity.getResourceSuccess', {
         args: { resource: ENTITY_NAME },
       }),
-      [ENTITY_NAME]: diary,
     };
   }
 
@@ -171,7 +171,7 @@ export class DiaryController {
     const pet_id = listDiary.pet_id;
 
     const diaries = await this.diaryService
-      .listDiary({ user_id, pet_id })
+      .listDiary({ pet_id, user_id })
       .catch((_) => {
         throw new InternalServerErrorException(
           this.i18n.t('entity.operationOnResourceError', {
@@ -184,13 +184,46 @@ export class DiaryController {
       });
 
     return {
+      [`${ENTITY_NAME}s`]: diaries,
       message: this.i18n.t('entity.operationSuccess', {
         args: {
           operation: this.i18n.t('operation.list'),
           resource: ENTITY_NAME,
         },
       }),
-      [`${ENTITY_NAME}s`]: diaries,
+    };
+  }
+
+  @UseGuards(DiaryOwnershipGuard)
+  @HttpCode(HttpStatus.OK)
+  @Patch(ROUTES.UPDATE)
+  @ApiAppSuccessResponse(Diary, ENTITY_NAME)
+  async updateDiary(
+    @Param(REQUEST_PARAM.ENTITY_ID) diary_id: string,
+    @Body()
+    updateDiaryDto: UpdateDiaryDto,
+  ) {
+    const updatedData = await this.diaryService
+      .update(diary_id, updateDiaryDto)
+      .catch((_) => {
+        throw new InternalServerErrorException(
+          this.i18n.t('entity.operationOnResourceError', {
+            args: {
+              operation: this.i18n.t('operation.update'),
+              resource: ENTITY_NAME,
+            },
+          }),
+        );
+      });
+
+    return {
+      [ENTITY_NAME]: updatedData,
+      message: this.i18n.t('entity.operationSuccess', {
+        args: {
+          operation: this.i18n.t('operation.update'),
+          resource: ENTITY_NAME,
+        },
+      }),
     };
   }
 
@@ -204,7 +237,7 @@ export class DiaryController {
     type: FileUploadDto,
   })
   @ApiAppSuccessResponse(Diary, ENTITY_NAME)
-  async petProfileBuilder(
+  async uploadDiaryImage(
     @UploadedFile(
       new ParseFilePipe({
         validators: [
@@ -316,38 +349,5 @@ export class DiaryController {
     } finally {
       await fs.rm(TEMP_FILE_PATH);
     }
-  }
-
-  @UseGuards(DiaryOwnershipGuard)
-  @HttpCode(HttpStatus.OK)
-  @Patch(ROUTES.UPDATE)
-  @ApiAppSuccessResponse(Diary, ENTITY_NAME)
-  async updatePet(
-    @Param(REQUEST_PARAM.ENTITY_ID) diary_id: string,
-    @Body()
-    updateDiaryDto: UpdateDiaryDto,
-  ) {
-    const updatedData = await this.diaryService
-      .update(diary_id, updateDiaryDto)
-      .catch((_) => {
-        throw new InternalServerErrorException(
-          this.i18n.t('entity.operationOnResourceError', {
-            args: {
-              operation: this.i18n.t('operation.update'),
-              resource: ENTITY_NAME,
-            },
-          }),
-        );
-      });
-
-    return {
-      message: this.i18n.t('entity.operationSuccess', {
-        args: {
-          operation: this.i18n.t('operation.update'),
-          resource: ENTITY_NAME,
-        },
-      }),
-      [ENTITY_NAME]: updatedData,
-    };
   }
 }

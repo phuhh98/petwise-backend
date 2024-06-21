@@ -1,9 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { BaseServiceAbstract } from 'src/common/services/base/base.abstract.service';
-import { DiaryRepository } from './diary.repository';
-import { IDiary } from 'src/interfaces/entities/pet-diary.interface';
-import { IImageUploadParams } from './interfaces/diary.interface.repository';
 import { QueryOptions } from 'src/common/repositories/base/base.interface.repository';
+import { BaseServiceAbstract } from 'src/common/services/base/base.abstract.service';
+import { IDiary } from 'src/interfaces/entities/pet-diary.interface';
+
+import { DiaryRepository } from './diary.repository';
+import { IImageUploadParams } from './interfaces/diary.interface.repository';
 
 @Injectable()
 export class DiaryService extends BaseServiceAbstract<IDiary> {
@@ -16,15 +17,15 @@ export class DiaryService extends BaseServiceAbstract<IDiary> {
   }
 
   async listDiary(
-    { user_id, pet_id }: { user_id: string; pet_id?: string },
+    { pet_id, user_id }: { pet_id?: string; user_id: string },
     queryOptions?: QueryOptions,
   ) {
     return await this.diaryRepository.listDiary({
-      values: {
-        user_id,
-        pet_id,
-      },
       options: queryOptions,
+      values: {
+        pet_id,
+        user_id,
+      },
     });
   }
 

@@ -1,17 +1,17 @@
 import { Bucket } from '@google-cloud/storage';
 import { Injectable } from '@nestjs/common';
+import { UploadedFileDto } from 'src/common/dto/uploaded-file.dto';
 import { BaseRepositoryAbstract } from 'src/common/repositories/base/base.abstract.repository';
 import { IBaseRepository } from 'src/common/repositories/base/base.interface.repository';
 import { FirestorageService } from 'src/common/services/firebase/firebase-storage.service';
 import { FirestoreService } from 'src/common/services/firebase/firestore.service';
+import { IDiary } from 'src/interfaces/entities/pet-diary.interface';
 
-import { UploadedFileDto } from 'src/common/dto/uploaded-file.dto';
 import {
   IDiaryRepository,
   IImageUploadParams,
   IListDiaryParams,
 } from './interfaces/diary.interface.repository';
-import { IDiary } from 'src/interfaces/entities/pet-diary.interface';
 
 const COLLECTION_NAME = 'diary';
 
@@ -20,8 +20,8 @@ export class DiaryRepository
   extends BaseRepositoryAbstract<IDiary>
   implements IDiaryRepository
 {
-  private readonly bucket: Bucket;
   private readonly FILE_TYPE_META = 'diary_image';
+  private readonly bucket: Bucket;
   constructor(
     private readonly fireStoreService: FirestoreService,
     private readonly fireStorageService: FirestorageService,
