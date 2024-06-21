@@ -1,14 +1,12 @@
-import {
-  CollectionReference,
-  FieldPath,
-  Firestore,
-  OrderByDirection,
-  WhereFilterOp,
-} from 'firebase-admin/firestore';
+import { CollectionReference, Firestore } from 'firebase-admin/firestore';
 import { IBaseEntity } from 'src/interfaces/entities/common.interface';
 import { IFindManyReturnFormat } from 'src/interfaces/services/find-many-return.interface';
 
-import { IBaseRepository } from './base.interface.repository';
+import {
+  FindAllCondition,
+  IBaseRepository,
+  QueryOptions,
+} from './base.interface.repository';
 
 export abstract class BaseRepositoryAbstract<T extends IBaseEntity>
   implements IBaseRepository<T>
@@ -41,19 +39,8 @@ export abstract class BaseRepositoryAbstract<T extends IBaseEntity>
   }
 
   async findAll(
-    condition: {
-      fieldPath: FieldPath | string;
-      opStr: WhereFilterOp;
-      value: unknown;
-    }[],
-    options?: {
-      limit?: number;
-      offSet?: number;
-      orderBy?: {
-        directionStr?: OrderByDirection;
-        fieldPath: FieldPath | string;
-      };
-    },
+    condition: FindAllCondition,
+    options?: QueryOptions,
   ): Promise<IFindManyReturnFormat<T>> {
     let query: ReturnType<CollectionReference<Omit<T, 'id'>>['where']>;
     for (let i = 0; i < condition.length; i++) {

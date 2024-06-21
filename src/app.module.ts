@@ -13,6 +13,7 @@ import { FirestorageService } from './common/services/firebase/firebase-storage.
 import { FirestoreService } from './common/services/firebase/firestore.service';
 import { LLMModule } from './modules/llm/llm.module';
 import { PetModule } from './modules/pet/pet.module';
+import { DiaryModule } from './modules/diary/diary.module';
 
 /**
  * This modules is marked as Global so that all of it exported modules/provider is shared globally
@@ -53,6 +54,7 @@ import { PetModule } from './modules/pet/pet.module';
     }),
     LLMModule,
     PetModule,
+    DiaryModule,
   ],
 
   providers: [

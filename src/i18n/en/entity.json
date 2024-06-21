@@ -1,5 +1,6 @@
 {
   "resourceNotFound": "Resource not found",
+  "resourceNotFoundTemplate": "Can not find {resource} with {resource_id}",
   "createError": "Error while creating {resource}",
   "createSuccess": "{resource} created successfully",
   "deleteSuccess": "Delete {resource} with id {resource_id} successfully",

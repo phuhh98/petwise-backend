@@ -1,14 +1,13 @@
+import { UploadedFileDto } from 'src/common/dto/uploaded-file.dto';
 import { IBaseRepository } from 'src/common/repositories/base/base.interface.repository';
 import { IPet } from 'src/interfaces/entities/pet.interface';
-
-import { UploadedFileDto } from '../dto/pet.dto';
 
 export interface IPetRepository extends IBaseRepository<IPet> {
   deleteFile(file_name: string): Promise<boolean>;
 
   listPetByUserId(
     user_id: string,
-  ): ReturnType<IBaseRepository<IPet>['findAll']>;
+  ): Promise<ReturnType<IBaseRepository<IPet>['findAll']>>;
 
   uploadPetAvatar({
     contentType,

@@ -34,18 +34,23 @@ import { I18nTranslations } from 'src/generated/i18n.generated';
 import { ResLocals } from 'src/interfaces/express.interface';
 import { v4 as uuidv4 } from 'uuid';
 
-import { Pet } from './dto/pet.dto';
-import { CreatePetDto, UpdatePetDto } from './dto/request.dto';
-import { PetService } from './pet.service';
-import { PetOwnershipGuard } from './pet-ownership.guard';
+import { DiaryOwnershipGuard } from './diary-ownership.guard';
+import { DiaryService } from './diary.service';
+import {
+  CreateDiaryDto,
+  ListDiaryDto,
+  UpdateDiaryDto,
+} from './dto/request.dto';
+import { Diary } from './dto/diary.dto';
+import { PetPayloadOwnershipGuard } from './pet-payload-ownership.guard';
 import { REGEX_PATTERN } from 'src/common/constants/regex.constant';
 
-const CONTROLLER_ROUTE_PATH = 'pet';
-const ENTITY_PATH = 'pet';
-const ENTITY_NAME = 'pet';
+const CONTROLLER_ROUTE_PATH = 'diary';
+const ENTITY_PATH = 'diary';
+const ENTITY_NAME = 'diary';
 
 enum REQUEST_PARAM {
-  ENTITY_ID = 'pet_id',
+  ENTITY_ID = 'diary_id',
   FILE_FIELD_NAME = 'file',
 }
 
@@ -55,91 +60,92 @@ enum ROUTES {
   GET = `${ENTITY_PATH}/:${REQUEST_PARAM.ENTITY_ID}`,
   LIST = 'list',
   UPDATE = `${ENTITY_PATH}/:${REQUEST_PARAM.ENTITY_ID}`,
-  UPLOAD_AVATAR = `${ENTITY_PATH}/:${REQUEST_PARAM.ENTITY_ID}/avatar`,
+  UPLOAD_IMAGE = `${ENTITY_PATH}/:${REQUEST_PARAM.ENTITY_ID}/image`,
 }
 
 @ApiTags(CONTROLLER_ROUTE_PATH)
 @ApiBearerAuth()
 @Controller(CONTROLLER_ROUTE_PATH)
 @UseGuards(FirebaseAuthenticationGuard)
-export class PetController {
+export class DiaryController {
   constructor(
-    private readonly petService: PetService,
+    private readonly diaryService: DiaryService,
     private readonly i18n: I18nService<I18nTranslations>,
   ) {}
 
   @Post(ROUTES.CREATE)
   @HttpCode(HttpStatus.CREATED)
-  @ApiAppCreateSuccessResponse(Pet, ENTITY_NAME)
+  @UseGuards(PetPayloadOwnershipGuard)
+  @ApiAppCreateSuccessResponse(Diary, ENTITY_NAME)
   async createPet(
     @Body()
-    createPetDto: CreatePetDto,
+    createDiaryDto: CreateDiaryDto,
     @Res({ passthrough: true })
     response: ResLocals.FirebaseAuthenticatedRequest,
   ) {
     const user_id = response.locals.user_id;
-    createPetDto.user_id = user_id;
+    createDiaryDto.user_id = user_id;
 
-    const pet = await this.petService.create(createPetDto).catch((_) => {
+    const diary = await this.diaryService.create(createDiaryDto).catch((_) => {
       throw new InternalServerErrorException(
         this.i18n.t('entity.createError', { args: { resource: ENTITY_NAME } }),
       );
     });
 
+    console.log(diary);
+
     return {
       message: this.i18n.t('entity.createSuccess', {
         args: { resource: ENTITY_NAME },
       }),
-      [ENTITY_NAME]: pet,
+      [ENTITY_NAME]: diary,
     };
   }
 
-  @UseGuards(PetOwnershipGuard)
+  @UseGuards(DiaryOwnershipGuard)
   @HttpCode(HttpStatus.OK)
   @Delete(ROUTES.DELETE)
   @ApiAppSuccessResponse(EmptyDto)
-  async deletePet(@Param(REQUEST_PARAM.ENTITY_ID) pet_id: string) {
-    const pet = await this.petService.findOne(pet_id).catch((_) => {
+  async deleteDiary(@Param(REQUEST_PARAM.ENTITY_ID) diary_id: string) {
+    const diary = await this.diaryService.findOne(diary_id).catch((_) => {
       throw new NotFoundException(this.i18n.t('entity.resourceNotFound'));
     });
 
-    await this.petService.remove(pet_id).catch((_) => {
+    await this.diaryService.remove(diary_id).catch((_) => {
       throw new InternalServerErrorException(
         this.i18n.t('entity.deleteError', {
-          args: { resource_id: pet_id, resoure: ENTITY_NAME },
+          args: { resource_id: diary_id, resoure: ENTITY_NAME },
         }),
       );
     });
 
     // if file exist then delete
-    if (!!pet.avatar?.file_id && !!pet.avatar?.file_name) {
-      await this.petService
-        .deleteAvatarImage(pet.avatar.file_name)
-        .catch((_) => {
-          throw new InternalServerErrorException(
-            this.i18n.t('entity.deleteAssociatedFileError', {
-              args: {
-                resource: ENTITY_NAME,
-                resource_id: pet_id,
-              },
-            }),
-          );
-        });
+    if (!!diary.image?.file_id && !!diary.image?.file_name) {
+      await this.diaryService.deleteImage(diary.image.file_name).catch((_) => {
+        throw new InternalServerErrorException(
+          this.i18n.t('entity.deleteAssociatedFileError', {
+            args: {
+              resource: ENTITY_NAME,
+              resource_id: diary_id,
+            },
+          }),
+        );
+      });
     }
 
     return {
       message: this.i18n.t('entity.deleteSuccess', {
-        args: { resource: ENTITY_NAME, resource_id: pet_id },
+        args: { resource: ENTITY_NAME, resource_id: diary },
       }),
     };
   }
 
-  @UseGuards(PetOwnershipGuard)
+  @UseGuards(DiaryOwnershipGuard)
   @HttpCode(HttpStatus.OK)
   @Get(ROUTES.GET)
-  @ApiAppSuccessResponse(Pet, ENTITY_NAME)
-  async getPet(@Param(REQUEST_PARAM.ENTITY_ID) pet_id: string) {
-    const pet = await this.petService.findOne(pet_id).catch((_) => {
+  @ApiAppSuccessResponse(Diary, ENTITY_NAME)
+  async getDiary(@Param(REQUEST_PARAM.ENTITY_ID) diary_id: string) {
+    const diary = await this.diaryService.findOne(diary_id).catch((_) => {
       throw new NotFoundException(this.i18n.t('entity.resourceNotFound'));
     });
 
@@ -147,29 +153,35 @@ export class PetController {
       message: this.i18n.t('entity.getResourceSuccess', {
         args: { resource: ENTITY_NAME },
       }),
-      [ENTITY_NAME]: pet,
+      [ENTITY_NAME]: diary,
     };
   }
 
+  @UseGuards(PetPayloadOwnershipGuard)
   @Get(ROUTES.LIST)
   @HttpCode(HttpStatus.OK)
-  @ApiAppSuccessResponseArrayData(Pet)
-  async listPet(
+  @ApiAppSuccessResponseArrayData(Diary)
+  async listDiaryByPetId(
     @Res({ passthrough: true })
     response: ResLocals.FirebaseAuthenticatedRequest,
+    @Body()
+    listDiary: ListDiaryDto,
   ) {
     const user_id = response.locals.user_id;
+    const pet_id = listDiary.pet_id;
 
-    const pets = await this.petService.listPet(user_id).catch((_) => {
-      throw new InternalServerErrorException(
-        this.i18n.t('entity.operationOnResourceError', {
-          args: {
-            operation: this.i18n.t('operation.list'),
-            resource: ENTITY_NAME,
-          },
-        }),
-      );
-    });
+    const diaries = await this.diaryService
+      .listDiary({ user_id, pet_id })
+      .catch((_) => {
+        throw new InternalServerErrorException(
+          this.i18n.t('entity.operationOnResourceError', {
+            args: {
+              operation: this.i18n.t('operation.list'),
+              resource: ENTITY_NAME,
+            },
+          }),
+        );
+      });
 
     return {
       message: this.i18n.t('entity.operationSuccess', {
@@ -178,12 +190,12 @@ export class PetController {
           resource: ENTITY_NAME,
         },
       }),
-      [`${ENTITY_NAME}s`]: pets,
+      [`${ENTITY_NAME}s`]: diaries,
     };
   }
 
-  @UseGuards(PetOwnershipGuard)
-  @Post(ROUTES.UPLOAD_AVATAR)
+  @UseGuards(DiaryOwnershipGuard)
+  @Post(ROUTES.UPLOAD_IMAGE)
   @HttpCode(HttpStatus.OK)
   @UseInterceptors(FileInterceptor(REQUEST_PARAM.FILE_FIELD_NAME))
   @ApiConsumes('multipart/form-data')
@@ -191,7 +203,7 @@ export class PetController {
     description: 'A image of a pet',
     type: FileUploadDto,
   })
-  @ApiAppSuccessResponse(Pet, ENTITY_NAME)
+  @ApiAppSuccessResponse(Diary, ENTITY_NAME)
   async petProfileBuilder(
     @UploadedFile(
       new ParseFilePipe({
@@ -215,7 +227,7 @@ export class PetController {
     file: Express.Multer.File,
     @Res({ passthrough: true })
     response: ResLocals.FirebaseAuthenticatedRequest,
-    @Param(REQUEST_PARAM.ENTITY_ID) pet_id: string,
+    @Param(REQUEST_PARAM.ENTITY_ID) diary_id: string,
   ) {
     /**
      * File temporary store is out side of try block
@@ -229,11 +241,16 @@ export class PetController {
     try {
       const user_id = response.locals.user_id;
 
-      const fileData = await this.petService
-        .uploadAvatarImage({
+      const diary = await this.diaryService.findOne(diary_id).catch((_) => {
+        throw new NotFoundException(this.i18n.t('entity.resourceNotFound'));
+      });
+
+      const fileData = await this.diaryService
+        .uploadImage({
           contentType: file.mimetype,
           customMetadata: {
-            pet_id: pet_id,
+            diary_id,
+            pet_id: diary.pet_id,
             user_id,
           },
           file_name: TEMP_FILE_NAME,
@@ -244,26 +261,22 @@ export class PetController {
             this.i18n.t('entity.uploadAssociatedFileError', {
               args: {
                 resource: ENTITY_NAME,
-                resource_id: pet_id,
+                resource_id: diary_id,
               },
             }),
           );
         });
 
-      const pet = await this.petService.findOne(pet_id).catch((_) => {
-        throw new NotFoundException(this.i18n.t('entity.resourceNotFound'));
-      });
-
       // if file exist then delete before update
-      if (!!pet.avatar?.file_id && !!pet.avatar?.file_name) {
-        await this.petService
-          .deleteAvatarImage(pet.avatar.file_name)
+      if (!!diary.image?.file_id && !!diary.image?.file_name) {
+        await this.diaryService
+          .deleteImage(diary.image.file_name)
           .catch((_) => {
             throw new InternalServerErrorException(
               this.i18n.t('entity.deleteAssociatedFileError', {
                 args: {
                   resource: ENTITY_NAME,
-                  resource_id: pet_id,
+                  resource_id: diary_id,
                 },
               }),
             );
@@ -271,25 +284,31 @@ export class PetController {
       }
 
       // then update record with new info
-      await this.petService.update(pet_id, { avatar: fileData }).catch((_) => {
-        throw new InternalServerErrorException(
-          this.i18n.t('entity.operationOnResourceError', {
-            args: {
-              operation: this.i18n.t('operation.update'),
-              resource: ENTITY_NAME,
-            },
-          }),
-        );
-      });
+      await this.diaryService
+        .update(diary_id, { image: fileData })
+        .catch((_) => {
+          throw new InternalServerErrorException(
+            this.i18n.t('entity.operationOnResourceError', {
+              args: {
+                operation: this.i18n.t('operation.update'),
+                resource: ENTITY_NAME,
+              },
+            }),
+          );
+        });
 
       return {
         data: {
-          [ENTITY_NAME]: await this.petService.findOne(pet_id).catch((_) => {
-            throw new NotFoundException(this.i18n.t('entity.resourceNotFound'));
-          }),
+          [ENTITY_NAME]: await this.diaryService
+            .findOne(diary_id)
+            .catch((_) => {
+              throw new NotFoundException(
+                this.i18n.t('entity.resourceNotFound'),
+              );
+            }),
         },
         message: this.i18n.t('entity.uploadAssociatedFileSuccess', {
-          args: { resource: ENTITY_NAME, resource_id: pet_id },
+          args: { resource: ENTITY_NAME, resource_id: diary_id },
         }),
       };
     } catch (err) {
@@ -299,17 +318,17 @@ export class PetController {
     }
   }
 
-  @UseGuards(PetOwnershipGuard)
+  @UseGuards(DiaryOwnershipGuard)
   @HttpCode(HttpStatus.OK)
   @Patch(ROUTES.UPDATE)
-  @ApiAppSuccessResponse(Pet, ENTITY_NAME)
+  @ApiAppSuccessResponse(Diary, ENTITY_NAME)
   async updatePet(
-    @Param(REQUEST_PARAM.ENTITY_ID) pet_id: string,
+    @Param(REQUEST_PARAM.ENTITY_ID) diary_id: string,
     @Body()
-    updatePetDto: UpdatePetDto,
+    updateDiaryDto: UpdateDiaryDto,
   ) {
-    const updatedData = await this.petService
-      .update(pet_id, updatePetDto)
+    const updatedData = await this.diaryService
+      .update(diary_id, updateDiaryDto)
       .catch((_) => {
         throw new InternalServerErrorException(
           this.i18n.t('entity.operationOnResourceError', {

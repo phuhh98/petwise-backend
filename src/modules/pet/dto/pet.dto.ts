@@ -1,11 +1,8 @@
 import { PartialType } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsOptional, IsString, IsUrl, ValidateNested } from 'class-validator';
-import {
-  IPet,
-  IUploadedFile,
-  PetProfileNS,
-} from 'src/interfaces/entities/pet.interface';
+import { IsObject, IsString, ValidateNested } from 'class-validator';
+import { UploadedFileDto } from 'src/common/dto/uploaded-file.dto';
+import { IPet, PetProfileNS } from 'src/interfaces/entities/pet.interface';
 
 export namespace PetProfileDtoNS {
   class PetCoatingDto implements PetProfileNS.IPetCoating {
@@ -76,14 +73,17 @@ export namespace PetProfileDtoNS {
   }
 
   class PetAppearanceDto implements PetProfileNS.IPetAppearance {
+    @IsObject()
     @ValidateNested()
     @Type(() => PetBodyDto)
     body: PetBodyDto;
 
+    @IsObject()
     @ValidateNested()
     @Type(() => PetCoatingDto)
     coat: PetCoatingDto;
 
+    @IsObject()
     @ValidateNested()
     @Type(() => PetHeadDto)
     head: PetHeadDto;
@@ -96,6 +96,7 @@ export namespace PetProfileDtoNS {
   }
 
   export class PetProfileDto implements PetProfileNS.IPetProfile {
+    @IsObject()
     @ValidateNested()
     @Type(() => PartialType(PetAppearanceDto))
     appearance: PetAppearanceDto;
@@ -106,18 +107,22 @@ export namespace PetProfileDtoNS {
     @IsString()
     description: string;
 
+    @IsObject()
     @ValidateNested()
     @Type(() => PartialType(PetExerciseDto))
     exercise: PetExerciseDto;
 
+    @IsObject()
     @ValidateNested()
     @Type(() => PartialType(PetGroomingDto))
     grooming: PetGroomingDto;
 
+    @IsObject()
     @ValidateNested()
     @Type(() => PartialType(PetHealthDto))
     health: PetHealthDto;
 
+    @IsObject()
     @ValidateNested()
     @Type(() => PartialType(PetTemperamentDto))
     temperament: PetTemperamentDto;
@@ -127,35 +132,26 @@ export namespace PetProfileDtoNS {
   }
 }
 
-export class UploadedFileDto implements IUploadedFile {
-  @IsString()
-  file_id: string;
-
-  @IsString()
-  file_name: string;
-
-  @IsUrl()
-  public_url: string;
-}
-
 export class Pet implements IPet {
+  @IsObject()
   @ValidateNested()
   @Type(() => PartialType(UploadedFileDto))
   avatar: UploadedFileDto;
 
-  @IsOptional()
   @IsString()
-  bio?: string;
+  bio: string;
 
+  @IsString()
   id: string;
 
   @IsString()
   name: string;
 
-  @IsOptional()
+  @IsObject()
   @ValidateNested()
   @Type(() => PartialType(PetProfileDtoNS.PetProfileDto))
-  profile?: PetProfileDtoNS.PetProfileDto;
+  profile: PetProfileDtoNS.PetProfileDto;
 
+  @IsString()
   user_id: string;
 }

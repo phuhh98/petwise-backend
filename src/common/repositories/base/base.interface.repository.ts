@@ -10,19 +10,8 @@ export interface IBaseRepository<T extends IBaseEntity> {
   create(dto: T): Promise<T>;
 
   findAll(
-    condition: {
-      fieldPath: FieldPath | string;
-      opStr: WhereFilterOp;
-      value: any;
-    }[],
-    options?: {
-      limit?: number;
-      offSet?: number;
-      orderBy?: {
-        directionStr?: OrderByDirection;
-        fieldPath: FieldPath | string;
-      };
-    },
+    condition: FindAllCondition,
+    options?: QueryOptions,
   ): Promise<IFindManyReturnFormat<T>>;
 
   // findOneByCondition(condition?: object, projection?: string): Promise<T>;
@@ -35,3 +24,19 @@ export interface IBaseRepository<T extends IBaseEntity> {
 
   update(id: string, dto: Partial<T>): Promise<T>;
 }
+
+type QueryCondition = {
+  fieldPath: FieldPath | string;
+  opStr: WhereFilterOp;
+  value: any;
+};
+
+export type FindAllCondition = QueryCondition[];
+export type QueryOptions = {
+  limit?: number;
+  offSet?: number;
+  orderBy?: {
+    directionStr?: OrderByDirection;
+    fieldPath: FieldPath | string;
+  };
+};

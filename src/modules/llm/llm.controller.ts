@@ -33,6 +33,7 @@ import {
   TravelAssitantQueryDto,
 } from './llm.dto';
 import { LLMService } from './llm.service';
+import { REGEX_PATTERN } from 'src/common/constants/regex.constant';
 
 const CONTROLLER_ROUTE_PATH = 'llm';
 
@@ -81,7 +82,7 @@ export class LLMController {
            * https://ai.google.dev/gemini-api/docs/prompting_with_media?lang=node#video_formats
            */
           new FileTypeValidator({
-            fileType: /video\/(mp4|mpeg|mov|avi|x-flv|mpg|webm|wmv|3gpp)/,
+            fileType: REGEX_PATTERN.GOOGLE_API_SUPPORT_VIDEO_MIMETYPE,
           }),
         ],
       }),

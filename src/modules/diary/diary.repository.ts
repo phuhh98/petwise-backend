@@ -4,23 +4,24 @@ import { BaseRepositoryAbstract } from 'src/common/repositories/base/base.abstra
 import { IBaseRepository } from 'src/common/repositories/base/base.interface.repository';
 import { FirestorageService } from 'src/common/services/firebase/firebase-storage.service';
 import { FirestoreService } from 'src/common/services/firebase/firestore.service';
-import { IPet } from 'src/interfaces/entities/pet.interface';
 
-import {
-  IAvatarUploadOptions,
-  IPetRepository,
-} from './interfaces/pet.interface.repository';
 import { UploadedFileDto } from 'src/common/dto/uploaded-file.dto';
+import {
+  IDiaryRepository,
+  IImageUploadParams,
+  IListDiaryParams,
+} from './interfaces/diary.interface.repository';
+import { IDiary } from 'src/interfaces/entities/pet-diary.interface';
 
-const COLLECTION_NAME = 'pet';
+const COLLECTION_NAME = 'diary';
 
 @Injectable()
-export class PetRepository
-  extends BaseRepositoryAbstract<IPet>
-  implements IPetRepository
+export class DiaryRepository
+  extends BaseRepositoryAbstract<IDiary>
+  implements IDiaryRepository
 {
   private readonly bucket: Bucket;
-  private readonly FILE_TYPE_META = 'pet_avatar_image';
+  private readonly FILE_TYPE_META = 'diary_image';
   constructor(
     private readonly fireStoreService: FirestoreService,
     private readonly fireStorageService: FirestorageService,
@@ -37,12 +38,21 @@ export class PetRepository
     return true;
   }
 
-  async listPetByUserId(
-    user_id: string,
-  ): Promise<ReturnType<IBaseRepository<IPet>['findAll']>> {
-    return await super.findAll([
-      { fieldPath: 'user_id', opStr: '==', value: user_id },
-    ]);
+  async listDiary(
+    searchParams: IListDiaryParams,
+  ): Promise<ReturnType<IBaseRepository<IDiary>['findAll']>> {
+    const values = searchParams.values;
+    return await super.findAll(
+      [
+        { fieldPath: 'user_id', opStr: '==', value: values.user_id },
+        !!values.pet_id && {
+          fieldPath: 'pet_id',
+          opStr: '==',
+          value: values.pet_id,
+        },
+      ],
+      searchParams.options,
+    );
   }
 
   /**
@@ -51,12 +61,12 @@ export class PetRepository
    * @param fileMeta
    * @returns
    */
-  async uploadPetAvatar({
+  async uploadDiaryImage({
     contentType,
     customMetadata,
     file_name,
     fileAbsolutePath,
-  }: IAvatarUploadOptions): Promise<UploadedFileDto> {
+  }: IImageUploadParams): Promise<UploadedFileDto> {
     const [file] = await this.bucket.upload(fileAbsolutePath, {
       contentType,
     });
