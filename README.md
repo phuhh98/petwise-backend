@@ -77,7 +77,10 @@ Nest is [MIT licensed](LICENSE).
 # Project notes
 
 This project requires some change in library to support multi model with Google File API
-Make sure to add these line in **node_modules/@langchain/google-genai/dist/util/common.cjs** and **node_modules/@langchain/google-genai/dist/util/common.cjs** at **messageContentMedia** function
+Make sure to add these line in **node_modules/@langchain/google-genai/dist/utils/common.cjs** and **node_modules/@langchain/google-genai/dist/utils/common.cjs** at **messageContentMedia** function or run
+```console
+npm run prepare:lib
+```
 
 ```javascript
 function messageContentMedia(content) {
@@ -103,7 +106,7 @@ function messageContentMedia(content) {
 
 ### Firebase
 
-Put firebase service account key json file under **src/common/configs** folder with name firbase.keys.json
+Put firebase service account key json file under **src/common/configs** folder with name firebase.keys.json
 
 ### Api document
 

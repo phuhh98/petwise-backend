@@ -17,7 +17,8 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "prepare:lib": "cpy modified_modules/@langchain/google-genai/dist/utils/*  node_modules/@langchain/google-genai/dist/utils"
   },
   "dependencies": {
     "@google/generative-ai": "^0.12.0",
@@ -32,7 +33,6 @@
     "firebase": "^10.12.2",
     "firebase-admin": "^12.1.1",
     "langchain": "^0.2.5",
-    "mime-types": "^2.1.35",
     "nestjs-i18n": "^10.4.5",
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.1",
@@ -50,6 +50,7 @@
     "@types/supertest": "^6.0.0",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
+    "cpy-cli": "^5.0.0",
     "eslint": "^8.42.0",
     "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-perfectionist": "^2.11.0",
