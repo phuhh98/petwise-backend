@@ -2,10 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { PetEntity } from 'src/common/entities/pet.entity';
 import { BaseServiceAbstract } from 'src/common/services/base/base.abstract.service';
 
-import {
-  IAvatarUploadOptions,
-  PetRepository,
-} from '../repositories/pet.repository';
+import { IFIleUploadParams } from '../repositories/base/base.abstract.repository';
+import { PetRepository } from '../repositories/pet.repository';
 
 @Injectable()
 export class PetService extends BaseServiceAbstract<PetEntity> {
@@ -26,8 +24,8 @@ export class PetService extends BaseServiceAbstract<PetEntity> {
     customMetadata,
     file_name,
     fileAbsolutePath,
-  }: IAvatarUploadOptions) {
-    return await this.petRepository.uploadPetAvatar({
+  }: IFIleUploadParams) {
+    return await this.petRepository.uploadFile({
       contentType,
       customMetadata,
       file_name,

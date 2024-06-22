@@ -9,6 +9,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 
+import { BaseEntity } from './base.entity';
 import { UploadedFileEntity } from './uploaded-file.entity';
 
 export namespace DiaryNS {
@@ -44,7 +45,7 @@ export namespace DiaryNS {
   }
 }
 
-export class DiaryEntity {
+export class DiaryEntity extends BaseEntity {
   @IsObject()
   @ValidateNested()
   @Type(() => DiaryNS.DiaryGeneratedAnalysis)

@@ -2,6 +2,7 @@ import { PartialType } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsObject, IsString, ValidateNested } from 'class-validator';
 
+import { BaseEntity } from './base.entity';
 import { UploadedFileEntity } from './uploaded-file.entity';
 
 export namespace PetProfileNS {
@@ -132,7 +133,7 @@ export namespace PetProfileNS {
   }
 }
 
-export class PetEntity {
+export class PetEntity extends BaseEntity {
   @IsObject()
   @ValidateNested()
   @Type(() => PartialType(UploadedFileEntity))

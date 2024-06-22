@@ -3,10 +3,8 @@ import { DiaryEntity } from 'src/common/entities/diary.entity';
 import { QueryOptions } from 'src/common/repositories/base/base.interface.repository';
 import { BaseServiceAbstract } from 'src/common/services/base/base.abstract.service';
 
-import {
-  DiaryRepository,
-  IImageUploadParams,
-} from '../../common/repositories/diary.repository';
+import { DiaryRepository } from '../../common/repositories/diary.repository';
+import { IFIleUploadParams } from '../repositories/base/base.abstract.repository';
 
 @Injectable()
 export class DiaryService extends BaseServiceAbstract<DiaryEntity> {
@@ -36,8 +34,8 @@ export class DiaryService extends BaseServiceAbstract<DiaryEntity> {
     customMetadata,
     file_name,
     fileAbsolutePath,
-  }: IImageUploadParams) {
-    return await this.diaryRepository.uploadDiaryImage({
+  }: IFIleUploadParams) {
+    return await this.diaryRepository.uploadFile({
       contentType,
       customMetadata,
       file_name,

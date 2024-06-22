@@ -7,7 +7,9 @@ export abstract class BaseServiceAbstract<T> implements IBaseService<T> {
   constructor(private readonly repository: IBaseRepository<T>) {}
 
   async create(create_dto: T | any): Promise<T> {
-    return await this.repository.create(create_dto);
+    return await this.repository.create(create_dto).catch((err) => {
+      throw err;
+    });
   }
 
   async findAll(

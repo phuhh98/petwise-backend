@@ -1,6 +1,4 @@
-import { Bucket } from '@google-cloud/storage';
 import { Injectable } from '@nestjs/common';
-import { UploadedFileDto } from 'src/common/dtos/uploaded-file.dto';
 import { DiaryEntity } from 'src/common/entities/diary.entity';
 import { BaseRepositoryAbstract } from 'src/common/repositories/base/base.abstract.repository';
 import {
@@ -11,27 +9,21 @@ import { FirestorageService } from 'src/common/services/firebase/firebase-storag
 import { FirestoreService } from 'src/common/services/firebase/firestore.service';
 
 const COLLECTION_NAME = 'diary';
+const ASSOCIATED_FILE_TYPE_META = 'diary_image';
 
 @Injectable()
 export class DiaryRepository extends BaseRepositoryAbstract<DiaryEntity> {
-  private readonly FILE_TYPE_META = 'diary_image';
-  private readonly bucket: Bucket;
   constructor(
-    private readonly fireStoreService: FirestoreService,
-    private readonly fireStorageService: FirestorageService,
+    fireStoreService: FirestoreService,
+    fireStorageService: FirestorageService,
   ) {
-    super(fireStoreService.fireStore, COLLECTION_NAME);
-
-    this.bucket = this.fireStorageService.getStoragebucket();
+    super(
+      fireStoreService.fireStore,
+      fireStorageService,
+      COLLECTION_NAME,
+      ASSOCIATED_FILE_TYPE_META,
+    );
   }
-
-  async deleteFile(uniqueBucketFileName: string) {
-    const file = this.bucket.file(uniqueBucketFileName);
-
-    await file.delete();
-    return true;
-  }
-
   async listDiary(
     searchParams: IListDiaryParams,
   ): Promise<ReturnType<IBaseRepository<DiaryEntity>['findAll']>> {
@@ -48,43 +40,6 @@ export class DiaryRepository extends BaseRepositoryAbstract<DiaryEntity> {
       searchParams.options,
     );
   }
-
-  /**
-   * Upload and return public Url of a file
-   * @param fileAbsolutePath
-   * @param fileMeta
-   * @returns
-   */
-  async uploadDiaryImage({
-    contentType,
-    customMetadata,
-    file_name,
-    fileAbsolutePath,
-  }: IImageUploadParams): Promise<UploadedFileDto> {
-    const [file] = await this.bucket.upload(fileAbsolutePath, {
-      contentType,
-    });
-
-    await file.setMetadata({
-      metadata: {
-        ...customMetadata,
-        type: this.FILE_TYPE_META,
-      },
-    });
-
-    return {
-      file_id: file.id,
-      file_name,
-      public_url: file.makePublic() && file.publicUrl(),
-    };
-  }
-}
-
-export interface IImageUploadParams {
-  contentType: string;
-  customMetadata?: Record<string, any>;
-  file_name: string;
-  fileAbsolutePath: string;
 }
 
 export interface IListDiaryParams {
