@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
+import { DiaryService } from 'src/common/services/diary.service';
 
+import { DiaryRepository } from '../../common/repositories/diary.repository';
 import { PetModule } from '../pet/pet.module';
 import { DiaryController } from './diary.controller';
-import { DiaryRepository } from './diary.repository';
-import { DiaryService } from './diary.service';
 
 @Module({
   controllers: [DiaryController],

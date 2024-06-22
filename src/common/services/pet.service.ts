@@ -1,12 +1,14 @@
 import { Injectable } from '@nestjs/common';
+import { PetEntity } from 'src/common/entities/pet.entity';
 import { BaseServiceAbstract } from 'src/common/services/base/base.abstract.service';
-import { IPet } from 'src/interfaces/entities/pet.interface';
 
-import { IAvatarUploadOptions } from './interfaces/pet.interface.repository';
-import { PetRepository } from './pet.repository';
+import {
+  IAvatarUploadOptions,
+  PetRepository,
+} from '../repositories/pet.repository';
 
 @Injectable()
-export class PetService extends BaseServiceAbstract<IPet> {
+export class PetService extends BaseServiceAbstract<PetEntity> {
   constructor(private readonly petRepository: PetRepository) {
     super(petRepository);
   }

@@ -1,24 +1,22 @@
 import { Bucket } from '@google-cloud/storage';
 import { Injectable } from '@nestjs/common';
-import { UploadedFileDto } from 'src/common/dto/uploaded-file.dto';
+import { UploadedFileDto } from 'src/common/dtos/uploaded-file.dto';
+import { PetEntity } from 'src/common/entities/pet.entity';
 import { BaseRepositoryAbstract } from 'src/common/repositories/base/base.abstract.repository';
 import { IBaseRepository } from 'src/common/repositories/base/base.interface.repository';
 import { FirestorageService } from 'src/common/services/firebase/firebase-storage.service';
 import { FirestoreService } from 'src/common/services/firebase/firestore.service';
-import { IPet } from 'src/interfaces/entities/pet.interface';
-
-import {
-  IAvatarUploadOptions,
-  IPetRepository,
-} from './interfaces/pet.interface.repository';
 
 const COLLECTION_NAME = 'pet';
 
+export interface IAvatarUploadOptions {
+  contentType: string;
+  customMetadata?: Record<string, any>;
+  file_name: string;
+  fileAbsolutePath: string;
+}
 @Injectable()
-export class PetRepository
-  extends BaseRepositoryAbstract<IPet>
-  implements IPetRepository
-{
+export class PetRepository extends BaseRepositoryAbstract<PetEntity> {
   private readonly FILE_TYPE_META = 'pet_avatar_image';
   private readonly bucket: Bucket;
   constructor(
@@ -39,7 +37,7 @@ export class PetRepository
 
   async listPetByUserId(
     user_id: string,
-  ): Promise<ReturnType<IBaseRepository<IPet>['findAll']>> {
+  ): Promise<ReturnType<IBaseRepository<PetEntity>['findAll']>> {
     return await super.findAll([
       { fieldPath: 'user_id', opStr: '==', value: user_id },
     ]);

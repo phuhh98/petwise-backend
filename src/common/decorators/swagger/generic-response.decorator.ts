@@ -6,7 +6,7 @@ import {
   getSchemaPath,
 } from '@nestjs/swagger';
 
-import { SuccessResponseDto } from '../../dto/app-response.dto';
+import { SuccessResponseDto } from '../../dtos/app-response.dto';
 
 export const ApiAppSuccessResponse = <TModel extends Type<any>>(
   model: TModel,

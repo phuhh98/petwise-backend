@@ -1,13 +1,10 @@
 import { Type } from 'class-transformer';
 import { IsArray, IsObject, IsString, ValidateNested } from 'class-validator';
-import { UploadedFileDto } from 'src/common/dto/uploaded-file.dto';
-import {
-  IDiary,
-  PetDiaryNS,
-} from 'src/interfaces/entities/pet-diary.interface';
 
-export namespace DiaryDtoNS {
-  class Emotion implements PetDiaryNS.IPetEmotion {
+import { UploadedFileEntity } from './uploaded-file.entity';
+
+export namespace DiaryNS {
+  class Emotion {
     @IsString()
     description: string;
 
@@ -19,9 +16,7 @@ export namespace DiaryDtoNS {
     secondary_emotions: string[];
   }
 
-  export class DiaryGeneratedAnalysis
-    implements PetDiaryNS.IPetDiaryGenaratedAnalysis
-  {
+  export class DiaryGeneratedAnalysis {
     @IsArray()
     @IsString({ each: true })
     actions: string[];
@@ -36,18 +31,18 @@ export namespace DiaryDtoNS {
   }
 }
 
-export class Diary implements IDiary {
+export class DiaryEntity {
   @IsObject()
   @ValidateNested()
-  @Type(() => DiaryDtoNS.DiaryGeneratedAnalysis)
-  analysis: DiaryDtoNS.DiaryGeneratedAnalysis;
+  @Type(() => DiaryNS.DiaryGeneratedAnalysis)
+  analysis: DiaryNS.DiaryGeneratedAnalysis;
 
   @IsString()
   id: string;
 
   @ValidateNested()
-  @Type(() => UploadedFileDto)
-  image: UploadedFileDto;
+  @Type(() => UploadedFileEntity)
+  image: UploadedFileEntity;
 
   @IsString()
   pet_id: string;

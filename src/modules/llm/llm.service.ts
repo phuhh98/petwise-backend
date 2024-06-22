@@ -5,6 +5,13 @@ import { Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ProviderTokens } from 'src/common/constants/provider-token.constant';
 
+import { TravelAssitantQueryDto } from './dtos/request.dto';
+import {
+  GeolocationResDto,
+  PetDiaryBuilderResDto,
+  PetProfileBuilderResDto,
+  TravelAssisstantResDto,
+} from './dtos/response.dto';
 import { geolocationParser } from './langchain/gemini_tools/geolocationParser';
 import { petDiaryJsonParser } from './langchain/gemini_tools/petDiaryJsonParser';
 import { petProfileJsonParser } from './langchain/gemini_tools/petProfileJsonParser';
@@ -17,13 +24,6 @@ import {
 } from './langchain/prompts';
 import { petDiaryBuilderHumanMessage } from './langchain/prompts/messageComponents/petDiaryBuilderPrompts';
 import { petProfilebuilderHumanMessage } from './langchain/prompts/messageComponents/petProfileBuilderPrompts';
-import {
-  IGeolocationRes,
-  IPetDiaryBuilderReponse,
-  IPetProfileBuilderRes,
-  ITravelAssisstantQuery,
-  ITravelAssisstantReponse,
-} from './llm.type';
 
 @Injectable()
 export class LLMService {
@@ -39,15 +39,15 @@ export class LLMService {
           tools: [{ functionDeclarations: [geolocationParser] }],
         }),
       )
-      .pipe<IGeolocationRes>(new GoogleCustomJSONOutputParser());
+      .pipe<GeolocationResDto>(new GoogleCustomJSONOutputParser());
 
     const travelAssitantChain = travelAssistantPrompt
       .pipe(this.geminiModel)
       .pipe(new StringOutputParser());
 
     const master = RunnableMap.from<
-      ITravelAssisstantQuery,
-      ITravelAssisstantReponse
+      TravelAssitantQueryDto,
+      TravelAssisstantResDto
     >({
       answer: travelAssitantChain,
       location: geolocationChain,
@@ -71,7 +71,7 @@ export class LLMService {
           tools: [{ functionDeclarations: [petDiaryJsonParser] }],
         }),
       )
-      .pipe<IPetDiaryBuilderReponse>(new GoogleCustomJSONOutputParser());
+      .pipe<PetDiaryBuilderResDto>(new GoogleCustomJSONOutputParser());
 
     return await petDiaryBuilderChain.invoke({
       message: petDiaryBuilderHumanMessage({ fileUri, mimeType }),
@@ -92,7 +92,7 @@ export class LLMService {
           tools: [{ functionDeclarations: [petProfileJsonParser] }],
         }),
       )
-      .pipe<IPetProfileBuilderRes>(new GoogleCustomJSONOutputParser());
+      .pipe<PetProfileBuilderResDto>(new GoogleCustomJSONOutputParser());
 
     return await petProfileBuilderChain.invoke({
       message: petProfilebuilderHumanMessage({ fileUri, mimeType }),

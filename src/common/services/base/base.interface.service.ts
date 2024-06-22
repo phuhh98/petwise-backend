@@ -1,4 +1,4 @@
-import { IFindManyReturnFormat } from 'src/interfaces/services/find-many-return.interface';
+import { FindManyReturnFormatDto } from 'src/common/dtos/find-many-return.interface';
 
 export interface Write<T> {
   create(item: T | any): Promise<T>;
@@ -7,7 +7,10 @@ export interface Write<T> {
 }
 
 export interface Read<T> {
-  findAll(filter: object, options?: object): Promise<IFindManyReturnFormat<T>>;
+  findAll(
+    filter: object,
+    options?: object,
+  ): Promise<FindManyReturnFormatDto<T>>;
   findOne(id: string): Promise<T>;
 }
 

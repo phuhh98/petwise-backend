@@ -1,11 +1,11 @@
 import { PartialType } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsObject, IsString, ValidateNested } from 'class-validator';
-import { UploadedFileDto } from 'src/common/dto/uploaded-file.dto';
-import { IPet, PetProfileNS } from 'src/interfaces/entities/pet.interface';
 
-export namespace PetProfileDtoNS {
-  class PetCoatingDto implements PetProfileNS.IPetCoating {
+import { UploadedFileEntity } from './uploaded-file.entity';
+
+export namespace PetProfileNS {
+  class PetCoating {
     @IsString()
     colors: string;
 
@@ -13,7 +13,7 @@ export namespace PetProfileDtoNS {
     type: string;
   }
 
-  class PetHeadDto implements PetProfileNS.IPetHead {
+  class PetHead {
     @IsString()
     ears: string;
 
@@ -27,7 +27,7 @@ export namespace PetProfileDtoNS {
     shape: string;
   }
 
-  class PetBodyDto implements PetProfileNS.IPetBody {
+  class PetBody {
     @IsString()
     build: string;
 
@@ -35,7 +35,7 @@ export namespace PetProfileDtoNS {
     tail: string;
   }
 
-  class PetHealthDto implements PetProfileNS.IPetHealth {
+  class PetHealth {
     @IsString()
     commonHealthIssues: string;
 
@@ -43,14 +43,14 @@ export namespace PetProfileDtoNS {
     lifespan: string;
   }
 
-  class PetGroomingDto implements PetProfileNS.IPetGrooming {
+  class PetGrooming {
     @IsString()
     bathing: string;
 
     @IsString()
     frequency: string;
   }
-  class PetExerciseDto implements PetProfileNS.IPetExercise {
+  class PetExercise {
     @IsString()
     needs: string;
 
@@ -58,7 +58,7 @@ export namespace PetProfileDtoNS {
     suitableFor: string;
   }
 
-  class PetTemperamentDto implements PetProfileNS.IPetTemperament {
+  class PetTemperament {
     @IsString()
     barkingTendency: string;
 
@@ -72,21 +72,21 @@ export namespace PetProfileDtoNS {
     trainability: string;
   }
 
-  class PetAppearanceDto implements PetProfileNS.IPetAppearance {
+  class PetAppearance {
     @IsObject()
     @ValidateNested()
-    @Type(() => PetBodyDto)
-    body: PetBodyDto;
+    @Type(() => PetBody)
+    body: PetBody;
 
     @IsObject()
     @ValidateNested()
-    @Type(() => PetCoatingDto)
-    coat: PetCoatingDto;
+    @Type(() => PetCoating)
+    coat: PetCoating;
 
     @IsObject()
     @ValidateNested()
-    @Type(() => PetHeadDto)
-    head: PetHeadDto;
+    @Type(() => PetHead)
+    head: PetHead;
 
     @IsString()
     legs: string;
@@ -95,11 +95,11 @@ export namespace PetProfileDtoNS {
     size: string;
   }
 
-  export class PetProfileDto implements PetProfileNS.IPetProfile {
+  export class PetProfile {
     @IsObject()
     @ValidateNested()
-    @Type(() => PartialType(PetAppearanceDto))
-    appearance: PetAppearanceDto;
+    @Type(() => PartialType(PetAppearance))
+    appearance: PetAppearance;
 
     @IsString()
     breed: string;
@@ -109,34 +109,34 @@ export namespace PetProfileDtoNS {
 
     @IsObject()
     @ValidateNested()
-    @Type(() => PartialType(PetExerciseDto))
-    exercise: PetExerciseDto;
+    @Type(() => PartialType(PetExercise))
+    exercise: PetExercise;
 
     @IsObject()
     @ValidateNested()
-    @Type(() => PartialType(PetGroomingDto))
-    grooming: PetGroomingDto;
+    @Type(() => PartialType(PetGrooming))
+    grooming: PetGrooming;
 
     @IsObject()
     @ValidateNested()
-    @Type(() => PartialType(PetHealthDto))
-    health: PetHealthDto;
+    @Type(() => PartialType(PetHealth))
+    health: PetHealth;
 
     @IsObject()
     @ValidateNested()
-    @Type(() => PartialType(PetTemperamentDto))
-    temperament: PetTemperamentDto;
+    @Type(() => PartialType(PetTemperament))
+    temperament: PetTemperament;
 
     @IsString()
     type: string;
   }
 }
 
-export class Pet implements IPet {
+export class PetEntity {
   @IsObject()
   @ValidateNested()
-  @Type(() => PartialType(UploadedFileDto))
-  avatar: UploadedFileDto;
+  @Type(() => PartialType(UploadedFileEntity))
+  avatar: UploadedFileEntity;
 
   @IsString()
   bio: string;
@@ -149,8 +149,8 @@ export class Pet implements IPet {
 
   @IsObject()
   @ValidateNested()
-  @Type(() => PartialType(PetProfileDtoNS.PetProfileDto))
-  profile: PetProfileDtoNS.PetProfileDto;
+  @Type(() => PartialType(PetProfileNS.PetProfile))
+  profile: PetProfileNS.PetProfile;
 
   @IsString()
   user_id: string;

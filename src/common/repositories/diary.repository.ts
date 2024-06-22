@@ -1,25 +1,19 @@
 import { Bucket } from '@google-cloud/storage';
 import { Injectable } from '@nestjs/common';
-import { UploadedFileDto } from 'src/common/dto/uploaded-file.dto';
+import { UploadedFileDto } from 'src/common/dtos/uploaded-file.dto';
+import { DiaryEntity } from 'src/common/entities/diary.entity';
 import { BaseRepositoryAbstract } from 'src/common/repositories/base/base.abstract.repository';
-import { IBaseRepository } from 'src/common/repositories/base/base.interface.repository';
+import {
+  IBaseRepository,
+  QueryOptions,
+} from 'src/common/repositories/base/base.interface.repository';
 import { FirestorageService } from 'src/common/services/firebase/firebase-storage.service';
 import { FirestoreService } from 'src/common/services/firebase/firestore.service';
-import { IDiary } from 'src/interfaces/entities/pet-diary.interface';
-
-import {
-  IDiaryRepository,
-  IImageUploadParams,
-  IListDiaryParams,
-} from './interfaces/diary.interface.repository';
 
 const COLLECTION_NAME = 'diary';
 
 @Injectable()
-export class DiaryRepository
-  extends BaseRepositoryAbstract<IDiary>
-  implements IDiaryRepository
-{
+export class DiaryRepository extends BaseRepositoryAbstract<DiaryEntity> {
   private readonly FILE_TYPE_META = 'diary_image';
   private readonly bucket: Bucket;
   constructor(
@@ -40,7 +34,7 @@ export class DiaryRepository
 
   async listDiary(
     searchParams: IListDiaryParams,
-  ): Promise<ReturnType<IBaseRepository<IDiary>['findAll']>> {
+  ): Promise<ReturnType<IBaseRepository<DiaryEntity>['findAll']>> {
     const values = searchParams.values;
     return await super.findAll(
       [
@@ -84,4 +78,19 @@ export class DiaryRepository
       public_url: file.makePublic() && file.publicUrl(),
     };
   }
+}
+
+export interface IImageUploadParams {
+  contentType: string;
+  customMetadata?: Record<string, any>;
+  file_name: string;
+  fileAbsolutePath: string;
+}
+
+export interface IListDiaryParams {
+  options?: QueryOptions;
+  values: {
+    pet_id?: string;
+    user_id: string;
+  };
 }

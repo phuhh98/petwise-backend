@@ -1,12 +1,9 @@
+import { FindManyReturnFormatDto } from 'src/common/dtos/find-many-return.interface';
 import { IBaseRepository } from 'src/common/repositories/base/base.interface.repository';
-import { IBaseEntity } from 'src/interfaces/entities/common.interface';
-import { IFindManyReturnFormat } from 'src/interfaces/services/find-many-return.interface';
 
 import { IBaseService } from './base.interface.service';
 
-export abstract class BaseServiceAbstract<T extends IBaseEntity>
-  implements IBaseService<T>
-{
+export abstract class BaseServiceAbstract<T> implements IBaseService<T> {
   constructor(private readonly repository: IBaseRepository<T>) {}
 
   async create(create_dto: T | any): Promise<T> {
@@ -16,7 +13,7 @@ export abstract class BaseServiceAbstract<T extends IBaseEntity>
   async findAll(
     filter: Parameters<IBaseRepository<T>['findAll']>[0],
     options?: Parameters<IBaseRepository<T>['findAll']>[1],
-  ): Promise<IFindManyReturnFormat<T>> {
+  ): Promise<FindManyReturnFormatDto<T>> {
     return await this.repository.findAll(filter, options);
   }
   async findOne(id: string) {

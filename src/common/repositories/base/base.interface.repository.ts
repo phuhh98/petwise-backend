@@ -3,16 +3,15 @@ import {
   OrderByDirection,
   WhereFilterOp,
 } from 'firebase-admin/firestore';
-import { IBaseEntity } from 'src/interfaces/entities/common.interface';
-import { IFindManyReturnFormat } from 'src/interfaces/services/find-many-return.interface';
+import { FindManyReturnFormatDto } from 'src/common/dtos/find-many-return.interface';
 
-export interface IBaseRepository<T extends IBaseEntity> {
+export interface IBaseRepository<T> {
   create(dto: T): Promise<T>;
 
   findAll(
     condition: FindAllCondition,
     options?: QueryOptions,
-  ): Promise<IFindManyReturnFormat<T>>;
+  ): Promise<FindManyReturnFormatDto<T>>;
 
   // findOneByCondition(condition?: object, projection?: string): Promise<T>;
 
@@ -25,7 +24,7 @@ export interface IBaseRepository<T extends IBaseEntity> {
   update(id: string, dto: Partial<T>): Promise<T>;
 }
 
-type QueryCondition = {
+export type QueryCondition = {
   fieldPath: FieldPath | string;
   opStr: WhereFilterOp;
   value: any;

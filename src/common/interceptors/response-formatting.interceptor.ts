@@ -7,16 +7,17 @@ import {
 import { Response } from 'express';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { IAppStandardReponseFormat } from 'src/interfaces/response/app-standard-response.interface';
+
+import { AppStandardReponseDto } from '../dtos/app-standard-response.dto';
 
 @Injectable()
 export class ResponseFormattingInterceptor<T>
-  implements NestInterceptor<T, IAppStandardReponseFormat<T>>
+  implements NestInterceptor<T, AppStandardReponseDto<T>>
 {
   intercept(
     context: ExecutionContext,
     next: CallHandler,
-  ): Observable<IAppStandardReponseFormat<T>> {
+  ): Observable<AppStandardReponseDto<T>> {
     return next.handle().pipe(
       map((data) => {
         const message = data.message?.toString() ?? '';

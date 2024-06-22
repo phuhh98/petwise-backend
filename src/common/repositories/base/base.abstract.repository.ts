@@ -1,6 +1,5 @@
 import { CollectionReference, Firestore } from 'firebase-admin/firestore';
-import { IBaseEntity } from 'src/interfaces/entities/common.interface';
-import { IFindManyReturnFormat } from 'src/interfaces/services/find-many-return.interface';
+import { FindManyReturnFormatDto } from 'src/common/dtos/find-many-return.interface';
 
 import {
   FindAllCondition,
@@ -8,17 +7,15 @@ import {
   QueryOptions,
 } from './base.interface.repository';
 
-export abstract class BaseRepositoryAbstract<T extends IBaseEntity>
-  implements IBaseRepository<T>
-{
-  private readonly collection: CollectionReference<Omit<T, 'id'>>;
+export abstract class BaseRepositoryAbstract<T> implements IBaseRepository<T> {
+  private readonly collection: CollectionReference<T>;
   protected constructor(
     private readonly fireStore: Firestore,
     private readonly collectionName: string,
   ) {
     this.collection = this.fireStore.collection(
       collectionName,
-    ) as CollectionReference<Omit<T, 'id'>>;
+    ) as CollectionReference<T>;
   }
 
   private async isDocDataExist<T>(
@@ -35,14 +32,14 @@ export abstract class BaseRepositoryAbstract<T extends IBaseEntity>
     return {
       ...createdDoc,
       id: docRef.id,
-    } as T;
+    };
   }
 
   async findAll(
     condition: FindAllCondition,
     options?: QueryOptions,
-  ): Promise<IFindManyReturnFormat<T>> {
-    let query: ReturnType<CollectionReference<Omit<T, 'id'>>['where']>;
+  ): Promise<FindManyReturnFormatDto<T>> {
+    let query: ReturnType<CollectionReference<T>['where']>;
     for (let i = 0; i < condition.length; i++) {
       if (!query) {
         query = this.collection.where(
@@ -81,7 +78,7 @@ export abstract class BaseRepositoryAbstract<T extends IBaseEntity>
     }
 
     const docs = querySnapshot.docs.map((doc) => ({
-      ...(doc.data() as T),
+      ...doc.data(),
       id: doc.id,
     }));
 
@@ -113,6 +110,6 @@ export abstract class BaseRepositoryAbstract<T extends IBaseEntity>
     return {
       ...updatedData,
       id: docRef.id,
-    } as T;
+    };
   }
 }

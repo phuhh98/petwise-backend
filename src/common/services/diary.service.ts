@@ -1,13 +1,15 @@
 import { Injectable } from '@nestjs/common';
+import { DiaryEntity } from 'src/common/entities/diary.entity';
 import { QueryOptions } from 'src/common/repositories/base/base.interface.repository';
 import { BaseServiceAbstract } from 'src/common/services/base/base.abstract.service';
-import { IDiary } from 'src/interfaces/entities/pet-diary.interface';
 
-import { DiaryRepository } from './diary.repository';
-import { IImageUploadParams } from './interfaces/diary.interface.repository';
+import {
+  DiaryRepository,
+  IImageUploadParams,
+} from '../../common/repositories/diary.repository';
 
 @Injectable()
-export class DiaryService extends BaseServiceAbstract<IDiary> {
+export class DiaryService extends BaseServiceAbstract<DiaryEntity> {
   constructor(private readonly diaryRepository: DiaryRepository) {
     super(diaryRepository);
   }

@@ -7,10 +7,9 @@ import {
 } from '@nestjs/common';
 import { Request } from 'express';
 import { I18nService } from 'nestjs-i18n';
+import { PetService } from 'src/common/services/pet.service';
 import { I18nTranslations } from 'src/generated/i18n.generated';
 import { ResLocals } from 'src/interfaces/express.interface';
-
-import { PetService } from '../pet/pet.service';
 
 /**
  * Route guard to validate user ownership of pet based on pet_id in request body

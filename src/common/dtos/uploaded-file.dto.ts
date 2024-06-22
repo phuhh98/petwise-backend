@@ -1,7 +1,6 @@
 import { IsString, IsUrl } from 'class-validator';
-import { IUploadedFile } from 'src/interfaces/entities/pet.interface';
 
-export class UploadedFileDto implements IUploadedFile {
+export class UploadedFileDto {
   @IsString()
   file_id: string;
 

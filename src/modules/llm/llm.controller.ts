@@ -21,18 +21,16 @@ import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import { REGEX_PATTERN } from 'src/common/constants/regex.constant';
 import { ApiAppSuccessResponse } from 'src/common/decorators/swagger/generic-response.decorator';
-import { FileUploadDto } from 'src/common/dto/common-request.dto';
+import { FileUploadDto } from 'src/common/dtos/common-request.dto';
+import { DiaryNS } from 'src/common/entities/diary.entity';
+import { PetProfileNS } from 'src/common/entities/pet.entity';
 import { FirebaseAuthenticationGuard } from 'src/common/guards/firebase-authentication.guard';
 import { I18nTranslations } from 'src/generated/i18n.generated';
-import { PetProfileDtoNS } from 'src/modules/pet/dto/pet.dto';
 import { v4 as uuidv4 } from 'uuid';
 
+import { TravelAssitantQueryDto } from './dtos/request.dto';
+import { TravelAssisstantResDto } from './dtos/response.dto';
 import { GooleAIFileServiceWrapper } from './langchain/googleServices/googleFileUpload.service';
-import {
-  PetDiaryDto,
-  TravelAssisstantResDto,
-  TravelAssitantQueryDto,
-} from './llm.dto';
 import { LLMService } from './llm.service';
 
 const CONTROLLER_ROUTE_PATH = 'llm';
@@ -61,7 +59,7 @@ export class LLMController {
   @Post(ROUTES.PET_DIARY_BUILDER)
   @HttpCode(HttpStatus.OK)
   @UseInterceptors(FileInterceptor(REQUEST_PARAM.FILE_FIELD_NAME))
-  @ApiAppSuccessResponse(PetDiaryDto)
+  @ApiAppSuccessResponse(DiaryNS.DiaryGeneratedAnalysis)
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     description: 'A video of a  pet',
@@ -180,7 +178,7 @@ export class LLMController {
   @Post(ROUTES.PET_PROFILE_BUILDER)
   @HttpCode(HttpStatus.OK)
   @UseInterceptors(FileInterceptor(REQUEST_PARAM.FILE_FIELD_NAME))
-  @ApiAppSuccessResponse(PetProfileDtoNS.PetProfileDto)
+  @ApiAppSuccessResponse(PetProfileNS.PetProfile)
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     description: 'A image of a pet',
