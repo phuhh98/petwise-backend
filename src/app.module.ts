@@ -1,6 +1,7 @@
 import { Global, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_INTERCEPTOR } from '@nestjs/core';
+import Joi from 'joi';
 import { AcceptLanguageResolver, I18nModule, QueryResolver } from 'nestjs-i18n';
 import path from 'node:path';
 
@@ -36,6 +37,16 @@ import { PetModule } from './modules/pet/pet.module';
     ConfigModule.forRoot({
       envFilePath: ['.local.env'],
       isGlobal: true,
+      validationSchema: Joi.object<NodeJS.ProcessEnv>({
+        CORS_ALLOWED_ORIGIN: Joi.string().regex(
+          /^(((\|\|)?(https?:\/\/(www\.)?)?[-a-zA-Z0-9]{2,}(\.[-a-zA-Z0-9]{2,})(\.[-a-zA-Z0-9]{2,})?)|((\|\|)?(https?:\/\/(www\.)?)[-\d\w]+?:[\d]+?))+$/,
+        ),
+        FIREBASE_STORAGE_BUCKET: Joi.string().regex(
+          /^gs:\/\/[-a-zA-Z0-9]{2,}(\.[-a-zA-Z0-9]{2,})(\.[-a-zA-Z0-9]{2,})$/,
+        ),
+        GEMINI_API_KEY: Joi.string(),
+        PORT: Joi.number().port().default(3000),
+      }),
     }),
     I18nModule.forRoot({
       fallbackLanguage: 'en',

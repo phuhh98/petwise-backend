@@ -31,6 +31,7 @@
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
     "firebase-admin": "^12.1.1",
+    "joi": "^17.13.3",
     "langchain": "^0.2.5",
     "nestjs-i18n": "^10.4.5",
     "pluralize": "^8.0.0",
