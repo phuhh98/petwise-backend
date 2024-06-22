@@ -20,6 +20,7 @@ export const petDiaryBuilderSystemPrompt =
             primary_emotion: The main emotion of the pet in the video, most regconizable one
             secondary_emotions: An array of any secondary emotions of the pet
             description: A brief description of the pet emotion(s) in the video
+        happinessLevel: Evaluate the happiness level of the pet from the video in the range from 1 to 10 compare it its breed max level of happiness
         advice: Specilized advice for the pet owner if in the pet shows any negative symptom in health or emotion regard to its breed normal state'
         error: Error message when the video is out of scope of this prompt. Only populate this field when there is error, if not let it be null
       

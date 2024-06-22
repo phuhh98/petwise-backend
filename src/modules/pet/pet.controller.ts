@@ -43,7 +43,7 @@ import { PetOwnershipGuard } from './guards/pet-ownership.guard';
 const CONTROLLER_ROUTE_PATH = 'pet';
 const ENTITY_PATH = 'pet';
 const ENTITY_NAME = 'pet';
-const ENTITY_PLURAL = 'pet';
+const ENTITY_PLURAL = 'pets';
 
 enum REQUEST_PARAM {
   ENTITY_ID = 'pet_id',

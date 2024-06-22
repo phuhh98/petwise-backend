@@ -1,5 +1,13 @@
 import { Type } from 'class-transformer';
-import { IsArray, IsObject, IsString, ValidateNested } from 'class-validator';
+import {
+  IsArray,
+  IsNumber,
+  IsObject,
+  IsString,
+  Max,
+  Min,
+  ValidateNested,
+} from 'class-validator';
 
 import { UploadedFileEntity } from './uploaded-file.entity';
 
@@ -28,6 +36,11 @@ export namespace DiaryNS {
     @ValidateNested()
     @Type(() => Emotion)
     emotions: Emotion;
+
+    @Min(1)
+    @Max(10)
+    @IsNumber()
+    happiness_level: number;
   }
 }
 

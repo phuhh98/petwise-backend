@@ -93,8 +93,6 @@ export class DiaryController {
       );
     });
 
-    console.log(diary);
-
     return {
       [ENTITY_NAME]: diary,
       message: this.i18n.t('entity.createSuccess', {

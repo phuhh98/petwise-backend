@@ -51,6 +51,10 @@ export const petDiaryJsonParser: FunctionDeclaration = {
         properties: {},
         type: FunctionDeclarationSchemaType.STRING,
       },
+      happiness_level: {
+        description: 'Happiness level in range from 1 to 10',
+        type: FunctionDeclarationSchemaType.NUMBER,
+      },
     },
 
     required: ['actions', 'emotions', 'advice'],
