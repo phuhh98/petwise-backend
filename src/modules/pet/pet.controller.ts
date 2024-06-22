@@ -23,6 +23,7 @@ import { ApiBearerAuth, ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { I18nService } from 'nestjs-i18n';
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { plural } from 'pluralize';
 import { REGEX_PATTERN } from 'src/common/constants/regex.constant';
 import {
   ApiAppCreateSuccessResponse,
@@ -40,13 +41,13 @@ import { PetService } from '../../common/services/pet.service';
 import { CreatePetDto, UpdatePetDto } from './dtos/request.dto';
 import { PetOwnershipGuard } from './guards/pet-ownership.guard';
 
-const CONTROLLER_ROUTE_PATH = 'pet';
-const ENTITY_PATH = 'pet';
 const ENTITY_NAME = 'pet';
-const ENTITY_PLURAL = 'pets';
+const ENTITY_PLURAL = plural(ENTITY_NAME);
+const ENTITY_PATH = ENTITY_NAME;
+const CONTROLLER_ROUTE_PATH = ENTITY_NAME;
 
 enum REQUEST_PARAM {
-  ENTITY_ID = 'pet_id',
+  ENTITY_ID = `${ENTITY_NAME}_id`,
   FILE_FIELD_NAME = 'file',
 }
 
