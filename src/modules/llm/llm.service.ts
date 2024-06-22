@@ -1,6 +1,10 @@
+import { TaskType } from '@google/generative-ai';
 import { StringOutputParser } from '@langchain/core/output_parsers';
 import { RunnableMap } from '@langchain/core/runnables';
-import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
+import {
+  ChatGoogleGenerativeAI,
+  GoogleGenerativeAIEmbeddings,
+} from '@langchain/google-genai';
 import { Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ProviderTokens } from 'src/common/constants/provider-token.constant';
@@ -31,6 +35,24 @@ export class LLMService {
   private readonly configService: ConfigService<NodeJS.ProcessEnv>;
 
   private llmModelSingleton: ChatGoogleGenerativeAI;
+
+  embeddingModel(taskType: TaskType, chunk_title?: string) {
+    return new GoogleGenerativeAIEmbeddings({
+      apiKey:
+        this.configService.get<NodeJS.ProcessEnv['GEMINI_API_KEY']>(
+          'GEMINI_API_KEY',
+        ),
+      model: 'embedding-001',
+      taskType,
+      title: chunk_title,
+    });
+  }
+
+  async embeddingText(chunk: string) {
+    return await this.embeddingModel(TaskType.RETRIEVAL_DOCUMENT).embedQuery(
+      chunk,
+    );
+  }
 
   async geolocation(question: string) {
     const geolocationChain = geolocationPrompt

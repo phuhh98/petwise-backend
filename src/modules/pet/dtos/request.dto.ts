@@ -1,16 +1,12 @@
-import {
-  IntersectionType,
-  OmitType,
-  PartialType,
-  PickType,
-} from '@nestjs/swagger';
+import { IntersectionType, PartialType, PickType } from '@nestjs/swagger';
 import { PetEntity } from 'src/common/entities/pet.entity';
 
 export class CreatePetDto extends IntersectionType(
-  OmitType(PetEntity, ['id', 'user_id', 'avatar', 'created_at', 'updated_at']),
+  PickType(PetEntity, ['name']),
   PartialType(PickType(PetEntity, ['user_id', 'bio', 'profile'])),
 ) {}
 
-export class UpdatePetDto extends PartialType(
-  OmitType(PetEntity, ['id', 'user_id', 'avatar', 'created_at', 'updated_at']),
+class AllowedToUpdate extends PickType(PetEntity, ['name', 'bio', 'profile']) {}
+export class UpdatePetDto extends IntersectionType(
+  PartialType(AllowedToUpdate),
 ) {}

@@ -100,12 +100,18 @@ export class PetController {
   @HttpCode(HttpStatus.OK)
   @Delete(ROUTES.DELETE)
   @ApiAppSuccessResponse(EmptyDto)
-  async deletePet(@Param(REQUEST_PARAM.ENTITY_ID) pet_id: string) {
+  async deletePet(
+    @Param(REQUEST_PARAM.ENTITY_ID) pet_id: string,
+    @Res({ passthrough: true })
+    response: ResLocals.FirebaseAuthenticatedRequest,
+  ) {
+    const user_id = response.locals.user_id;
+
     const pet = await this.petService.findOne(pet_id).catch((_) => {
       throw new NotFoundException(this.i18n.t('entity.resourceNotFound'));
     });
 
-    await this.petService.remove(pet_id).catch((_) => {
+    await this.petService.remove(pet_id, user_id).catch((_) => {
       throw new InternalServerErrorException(
         this.i18n.t('entity.deleteError', {
           args: { resource_id: pet_id, resoure: ENTITY_NAME },

@@ -5,23 +5,23 @@ import {
 } from 'firebase-admin/firestore';
 import { FindManyReturnFormatDto } from 'src/common/dtos/find-many-return.interface';
 
-export interface IBaseRepository<T> {
-  create(dto: T): Promise<T>;
+export abstract class IBaseRepository<T> {
+  abstract create(dto: T): Promise<T>;
 
-  findAll(
+  abstract findAll(
     condition: FindAllCondition,
     options?: QueryOptions,
   ): Promise<FindManyReturnFormatDto<T>>;
 
   // findOneByCondition(condition?: object, projection?: string): Promise<T>;
 
-  findOneById(id: string, projection?: string): Promise<T>;
+  abstract findOneById(id: string, projection?: string): Promise<T>;
 
-  permanentlyDelete(id: string): Promise<boolean>;
+  protected abstract permanentlyDelete(id: string): Promise<boolean>;
 
   // softDelete(id: string): Promise<boolean>;
 
-  update(id: string, dto: Partial<T>): Promise<T>;
+  abstract update(id: string, dto: Partial<T>): Promise<T>;
 }
 
 export type QueryCondition = {

@@ -56,6 +56,14 @@ export class LLMController {
     private readonly i18n: I18nService<I18nTranslations>,
   ) {}
 
+  @Post('/embedding')
+  @HttpCode(HttpStatus.OK)
+  async embedding(@Body() query: TravelAssitantQueryDto) {
+    return {
+      data: await this.llmService.embeddingText(query.question),
+    };
+  }
+
   @Post(ROUTES.PET_DIARY_BUILDER)
   @HttpCode(HttpStatus.OK)
   @UseInterceptors(FileInterceptor(REQUEST_PARAM.FILE_FIELD_NAME))

@@ -1,14 +1,9 @@
 import { Bucket } from '@google-cloud/storage';
-import {
-  CollectionReference,
-  FieldValue,
-  Firestore,
-} from 'firebase-admin/firestore';
+import { CollectionReference, Firestore } from 'firebase-admin/firestore';
 import { FindManyReturnFormatDto } from 'src/common/dtos/find-many-return.interface';
 import { UploadedFileDto } from 'src/common/dtos/uploaded-file.dto';
-import { BaseEntity, IBaseEntity } from 'src/common/entities/base.entity';
+import { BaseEntity } from 'src/common/entities/base.entity';
 import { FirestorageService } from 'src/common/services/firebase/firebase-storage.service';
-import { isTimeStamp } from 'src/common/utils/typeGuards';
 
 import {
   FindAllCondition,
@@ -16,9 +11,9 @@ import {
   QueryOptions,
 } from './base.interface.repository';
 
-export abstract class BaseRepositoryAbstract<T extends IBaseEntity>
-  implements IBaseRepository<T>
-{
+export abstract class BaseRepositoryAbstract<
+  T extends BaseEntity,
+> extends IBaseRepository<T> {
   private readonly FILE_TYPE_META: string;
   private readonly bucket: Bucket;
   private readonly collection: CollectionReference<T>;
@@ -28,6 +23,7 @@ export abstract class BaseRepositoryAbstract<T extends IBaseEntity>
     collectionName: string,
     file_type_meta: string,
   ) {
+    super();
     this.collection = this.fireStore.collection(
       collectionName,
     ) as CollectionReference<T>;
@@ -38,63 +34,31 @@ export abstract class BaseRepositoryAbstract<T extends IBaseEntity>
   private async isDocDataExist(
     docRef: FirebaseFirestore.DocumentReference<T>,
   ): Promise<T> {
-    const docData = (await docRef.get()).data();
-    if (!docData) {
+    const docSnapshot = await docRef.get();
+    if (!docSnapshot.data()) {
       throw new Error('Resource does not exist');
     }
-    return await this.parseIdAndTimeStamp(docRef, docData);
-  }
-
-  private async parseId(
-    docRef: FirebaseFirestore.DocumentReference<T>,
-    docData?: T,
-  ): Promise<T> {
-    if (!docData) {
-      docData = (await docRef.get()).data();
-    }
-
-    return {
-      ...docData,
-      id: docRef.id,
-    };
+    return await this.parseIdAndTimeStamp(docSnapshot);
   }
 
   private async parseIdAndTimeStamp(
-    docRef: FirebaseFirestore.DocumentReference<T>,
-    docData?: T,
-  ) {
-    return this.parseTimeStamp(await this.parseId(docRef, docData));
-  }
-
-  private parseTimeStamp(docData: T): T {
+    docSnapshot: FirebaseFirestore.DocumentSnapshot<
+      T,
+      FirebaseFirestore.DocumentData
+    >,
+  ): Promise<T> {
     return {
-      ...docData,
-      created_at: isTimeStamp(docData.created_at)
-        ? docData.created_at.toDate()
-        : docData.created_at,
-
-      updated_at: isTimeStamp(docData.updated_at)
-        ? docData.updated_at.toDate()
-        : docData.updated_at,
+      ...docSnapshot.data(),
+      id: docSnapshot.id,
+      created_at: docSnapshot.createTime.toDate(),
+      updated_at: docSnapshot.updateTime.toDate(),
     };
   }
 
   async create(dto: T): Promise<T> {
-    const docRef = await this.collection.add({
-      ...dto,
-      /**
-       * Generate Timestamp instances
-       * Firebase use Timestamp class under the hood
-       */
-      created_at: FieldValue.serverTimestamp(),
-      updated_at: FieldValue.serverTimestamp(),
-    });
+    const docRef = await this.collection.add(dto);
 
-    const createdDoc = await this.isDocDataExist(docRef);
-    return this.parseTimeStamp({
-      ...createdDoc,
-      id: docRef.id,
-    });
+    return this.parseIdAndTimeStamp(await docRef.get());
   }
 
   async deleteFile(uniqueBucketFileName: string) {
@@ -146,11 +110,10 @@ export abstract class BaseRepositoryAbstract<T extends IBaseEntity>
       };
     }
 
-    const docs = querySnapshot.docs.map((doc) =>
-      this.parseTimeStamp({
-        ...doc.data(),
-        id: doc.id,
-      }),
+    const docs = await Promise.all(
+      querySnapshot.docs.map(
+        async (docSnapshot) => await this.parseIdAndTimeStamp(docSnapshot),
+      ),
     );
 
     return {
@@ -161,11 +124,15 @@ export abstract class BaseRepositoryAbstract<T extends IBaseEntity>
 
   async findOneById(id: string): Promise<T> {
     const docRef = this.collection.doc(id);
-    const data = await this.isDocDataExist(docRef);
-    return this.parseTimeStamp({ ...data, id: docRef.id });
+    const docData = await this.isDocDataExist(docRef);
+    return docData;
   }
 
-  async permanentlyDelete(id: string): Promise<boolean> {
+  public async delete(id: string, ...args: unknown[]): Promise<boolean> {
+    return await this.permanentlyDelete(id);
+  }
+
+  protected async permanentlyDelete(id: string): Promise<boolean> {
     const docRef = this.collection.doc(id);
     await docRef.delete();
     return true;
@@ -174,20 +141,9 @@ export abstract class BaseRepositoryAbstract<T extends IBaseEntity>
   async update(id: string, dto: Partial<T>): Promise<T> {
     const docRef = this.collection.doc(id);
 
-    await docRef.update({
-      ...dto,
-      /**
-       * Update update_at Timestamp
-       */
-      updated_at: FieldValue.serverTimestamp(),
-    } as Partial<T> & Pick<BaseEntity, 'updated_at'>);
+    await docRef.update(dto);
 
-    const updatedData = await this.isDocDataExist(docRef);
-
-    return this.parseTimeStamp({
-      ...updatedData,
-      id: docRef.id,
-    });
+    return await this.parseIdAndTimeStamp(await docRef.get());
   }
 
   /**
