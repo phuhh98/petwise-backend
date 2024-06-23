@@ -4,8 +4,7 @@ import {
 } from '@google/generative-ai';
 
 export const petProfileJsonParser: FunctionDeclaration = {
-  description: `Parse pet profile data from provided context into json format
-                If could not parse any required arguments to the desired format, omit it it response instead of return unknown`,
+  description: `Parse pet profile data from provided context into json format`,
   name: 'petProfileJsonParser',
   parameters: {
     description: 'Object which contains detail information from pet breed',
@@ -95,7 +94,7 @@ export const petProfileJsonParser: FunctionDeclaration = {
         type: FunctionDeclarationSchemaType.STRING,
       },
       error: {
-        description: 'Error message from provided context from error key',
+        description: 'Error message from provided context',
         properties: {},
         type: FunctionDeclarationSchemaType.STRING,
       },
@@ -180,6 +179,12 @@ export const petProfileJsonParser: FunctionDeclaration = {
       },
     },
 
+    /**
+     * Adding object properties in required fields will cause the return to be "unknown"
+     * This is because inner props was not parsed in that case but the required will terminate the function
+     * because it face required fields but could not resolve in the first level.
+     * The function have to run several rounds in order to fully parse all of the nested value of our desired structure
+     */
     required: [
       'type',
       'breed',

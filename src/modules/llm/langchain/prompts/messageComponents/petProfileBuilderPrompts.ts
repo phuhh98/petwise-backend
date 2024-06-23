@@ -3,12 +3,13 @@ import { SystemMessagePromptTemplate } from '@langchain/core/prompts';
 
 export const petProfileBuilderSystemPrompt =
   SystemMessagePromptTemplate.fromTemplate(`
-    Your role: A specialize vet
+    Your role: A vet specialist
     Job: Analyze provided picture and return details about the pet in the picture in provided format
     Return format: Field based format, each field has values or a short descriptions in 1 sentence:
         type: Type of pet - animal type
         breed: Pet breed
-        description: A brief description of the pet breed
+        description:  A description of the pet breed.
+                      Description should be at least 7 sentences and can be up to 200 words.
         appearance:
           size: Size of the pet. Examples: Massive, Tiny, Huge, Minuscule, Enormous, Puny,...
           coat:
