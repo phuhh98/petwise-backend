@@ -1,4 +1,5 @@
-import { Type } from 'class-transformer';
+import { OmitType } from '@nestjs/swagger';
+import { Exclude, Type } from 'class-transformer';
 import {
   IsArray,
   IsISO8601,
@@ -68,6 +69,9 @@ export class DiaryEntity extends BaseEntity {
   @IsString()
   pet_id: string;
 
+  @Exclude()
   @IsString()
   user_id: string;
 }
+
+export class DiaryEntitySwagger extends OmitType(DiaryEntity, ['user_id']) {}

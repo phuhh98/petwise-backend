@@ -1,9 +1,8 @@
-import { IsNumber, IsObject } from 'class-validator';
+import { IsNumber } from 'class-validator';
 
-export class FindManyReturnFormatDto<T> {
+export abstract class FindManyReturnFormatDto<T> {
   @IsNumber()
   count: number;
 
-  @IsObject({ each: true })
-  items: T[];
+  abstract items: T[];
 }

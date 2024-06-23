@@ -20,10 +20,10 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
+import { plainToClass } from 'class-transformer';
 import { I18nService } from 'nestjs-i18n';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { plural } from 'pluralize';
 import { REGEX_PATTERN } from 'src/common/constants/regex.constant';
 import {
   ApiAppCreateSuccessResponse,
@@ -31,7 +31,7 @@ import {
   ApiAppSuccessResponseArrayData,
 } from 'src/common/decorators/swagger/generic-response.decorator';
 import { EmptyDto, FileUploadDto } from 'src/common/dtos/common-request.dto';
-import { DiaryEntity } from 'src/common/entities/diary.entity';
+import { DiaryEntitySwagger } from 'src/common/entities/diary.entity';
 import { FirebaseAuthenticationGuard } from 'src/common/guards/firebase-authentication.guard';
 import { DiaryService } from 'src/common/services/diary.service';
 import { I18nTranslations } from 'src/generated/i18n.generated';
@@ -43,11 +43,18 @@ import {
   ListDiaryDto,
   UpdateDiaryDto,
 } from './dtos/request.dto';
+import {
+  CreatDiaryResDto,
+  DeleteDiaryResDto,
+  GetDiaryResDto,
+  ListDiaryResDto,
+  UpdateDiaryResDto,
+  UploadImageResDto,
+} from './dtos/response.dto';
 import { DiaryOwnershipGuard } from './guards/diary-ownership.guard';
 import { PetPayloadOwnershipGuard } from './guards/pet-payload-ownership.guard';
 
 const ENTITY_NAME = 'diary';
-const ENTITY_PLURAL = plural(ENTITY_NAME);
 const ENTITY_PATH = ENTITY_NAME;
 const CONTROLLER_ROUTE_PATH = ENTITY_NAME;
 
@@ -78,13 +85,13 @@ export class DiaryController {
   @Post(ROUTES.CREATE)
   @HttpCode(HttpStatus.CREATED)
   @UseGuards(PetPayloadOwnershipGuard)
-  @ApiAppCreateSuccessResponse(DiaryEntity, ENTITY_NAME)
+  @ApiAppCreateSuccessResponse(DiaryEntitySwagger, ENTITY_NAME)
   async createDiary(
     @Body()
     createDiaryDto: CreateDiaryDto,
     @Res({ passthrough: true })
     response: ResLocals.FirebaseAuthenticatedRequest,
-  ) {
+  ): Promise<CreatDiaryResDto> {
     const user_id = response.locals.user_id;
     createDiaryDto.user_id = user_id;
     /**
@@ -99,19 +106,21 @@ export class DiaryController {
       );
     });
 
-    return {
+    return plainToClass(CreatDiaryResDto, {
       [ENTITY_NAME]: diary,
       message: this.i18n.t('entity.createSuccess', {
         args: { resource: ENTITY_NAME },
       }),
-    };
+    });
   }
 
   @UseGuards(DiaryOwnershipGuard)
   @HttpCode(HttpStatus.OK)
   @Delete(ROUTES.DELETE)
   @ApiAppSuccessResponse(EmptyDto)
-  async deleteDiary(@Param(REQUEST_PARAM.ENTITY_ID) diary_id: string) {
+  async deleteDiary(
+    @Param(REQUEST_PARAM.ENTITY_ID) diary_id: string,
+  ): Promise<DeleteDiaryResDto> {
     const diary = await this.diaryService.findOne(diary_id).catch((_) => {
       throw new NotFoundException(this.i18n.t('entity.resourceNotFound'));
     });
@@ -138,40 +147,42 @@ export class DiaryController {
       });
     }
 
-    return {
+    return plainToClass(DeleteDiaryResDto, {
       message: this.i18n.t('entity.deleteSuccess', {
         args: { resource: ENTITY_NAME, resource_id: diary },
       }),
-    };
+    });
   }
 
   @UseGuards(DiaryOwnershipGuard)
   @HttpCode(HttpStatus.OK)
   @Get(ROUTES.GET)
-  @ApiAppSuccessResponse(DiaryEntity, ENTITY_NAME)
-  async getDiary(@Param(REQUEST_PARAM.ENTITY_ID) diary_id: string) {
+  @ApiAppSuccessResponse(DiaryEntitySwagger, ENTITY_NAME)
+  async getDiary(
+    @Param(REQUEST_PARAM.ENTITY_ID) diary_id: string,
+  ): Promise<GetDiaryResDto> {
     const diary = await this.diaryService.findOne(diary_id).catch((_) => {
       throw new NotFoundException(this.i18n.t('entity.resourceNotFound'));
     });
 
-    return {
+    return plainToClass(GetDiaryResDto, {
       [ENTITY_NAME]: diary,
       message: this.i18n.t('entity.getResourceSuccess', {
         args: { resource: ENTITY_NAME },
       }),
-    };
+    });
   }
 
   @UseGuards(PetPayloadOwnershipGuard)
   @Get(ROUTES.LIST)
   @HttpCode(HttpStatus.OK)
-  @ApiAppSuccessResponseArrayData(DiaryEntity)
+  @ApiAppSuccessResponseArrayData(DiaryEntitySwagger)
   async listDiaryByPetId(
     @Res({ passthrough: true })
     response: ResLocals.FirebaseAuthenticatedRequest,
     @Body()
     listDiary: ListDiaryDto,
-  ) {
+  ): Promise<ListDiaryResDto> {
     const user_id = response.locals.user_id;
     const pet_id = listDiary.pet_id;
 
@@ -188,26 +199,26 @@ export class DiaryController {
         );
       });
 
-    return {
-      [ENTITY_PLURAL]: diaries,
+    return plainToClass(ListDiaryResDto, {
+      diaries,
       message: this.i18n.t('entity.operationSuccess', {
         args: {
           operation: this.i18n.t('operation.list'),
           resource: ENTITY_NAME,
         },
       }),
-    };
+    });
   }
 
   @UseGuards(DiaryOwnershipGuard)
   @HttpCode(HttpStatus.OK)
   @Patch(ROUTES.UPDATE)
-  @ApiAppSuccessResponse(DiaryEntity, ENTITY_NAME)
+  @ApiAppSuccessResponse(DiaryEntitySwagger, ENTITY_NAME)
   async updateDiary(
     @Param(REQUEST_PARAM.ENTITY_ID) diary_id: string,
     @Body()
     updateDiaryDto: UpdateDiaryDto,
-  ) {
+  ): Promise<UpdateDiaryResDto> {
     const updatedData = await this.diaryService
       .update(diary_id, updateDiaryDto)
       .catch((_) => {
@@ -221,7 +232,7 @@ export class DiaryController {
         );
       });
 
-    return {
+    return plainToClass(UpdateDiaryResDto, {
       [ENTITY_NAME]: updatedData,
       message: this.i18n.t('entity.operationSuccess', {
         args: {
@@ -229,7 +240,7 @@ export class DiaryController {
           resource: ENTITY_NAME,
         },
       }),
-    };
+    });
   }
 
   @UseGuards(DiaryOwnershipGuard)
@@ -241,7 +252,7 @@ export class DiaryController {
     description: 'A image of a pet',
     type: FileUploadDto,
   })
-  @ApiAppSuccessResponse(DiaryEntity, ENTITY_NAME)
+  @ApiAppSuccessResponse(DiaryEntitySwagger, ENTITY_NAME)
   async uploadDiaryImage(
     @UploadedFile(
       new ParseFilePipe({
@@ -266,7 +277,7 @@ export class DiaryController {
     @Res({ passthrough: true })
     response: ResLocals.FirebaseAuthenticatedRequest,
     @Param(REQUEST_PARAM.ENTITY_ID) diary_id: string,
-  ) {
+  ): Promise<UploadImageResDto> {
     /**
      * File temporary store is out side of try block
      */
@@ -335,7 +346,7 @@ export class DiaryController {
           );
         });
 
-      return {
+      return plainToClass(UploadImageResDto, {
         data: {
           [ENTITY_NAME]: await this.diaryService
             .findOne(diary_id)
@@ -348,7 +359,7 @@ export class DiaryController {
         message: this.i18n.t('entity.uploadAssociatedFileSuccess', {
           args: { resource: ENTITY_NAME, resource_id: diary_id },
         }),
-      };
+      });
     } catch (err) {
       throw err;
     } finally {

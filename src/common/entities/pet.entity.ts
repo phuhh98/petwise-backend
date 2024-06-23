@@ -1,5 +1,5 @@
-import { PartialType } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
+import { OmitType, PartialType } from '@nestjs/swagger';
+import { Exclude, Type } from 'class-transformer';
 import { IsObject, IsString, ValidateNested } from 'class-validator';
 
 import { BaseEntity } from './base.entity';
@@ -153,6 +153,9 @@ export class PetEntity extends BaseEntity {
   @Type(() => PartialType(PetProfileNS.PetProfile))
   profile: PetProfileNS.PetProfile;
 
+  @Exclude()
   @IsString()
   user_id: string;
 }
+
+export class PetEntitySwagger extends OmitType(PetEntity, ['user_id']) {}

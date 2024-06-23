@@ -1,5 +1,6 @@
 import {
   Body,
+  ClassSerializerInterceptor,
   Controller,
   Delete,
   FileTypeValidator,
@@ -20,10 +21,10 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
+import { plainToClass } from 'class-transformer';
 import { I18nService } from 'nestjs-i18n';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { plural } from 'pluralize';
 import { REGEX_PATTERN } from 'src/common/constants/regex.constant';
 import {
   ApiAppCreateSuccessResponse,
@@ -31,7 +32,7 @@ import {
   ApiAppSuccessResponseArrayData,
 } from 'src/common/decorators/swagger/generic-response.decorator';
 import { EmptyDto, FileUploadDto } from 'src/common/dtos/common-request.dto';
-import { PetEntity } from 'src/common/entities/pet.entity';
+import { PetEntity, PetEntitySwagger } from 'src/common/entities/pet.entity';
 import { FirebaseAuthenticationGuard } from 'src/common/guards/firebase-authentication.guard';
 import { I18nTranslations } from 'src/generated/i18n.generated';
 import { ResLocals } from 'src/interfaces/express.interface';
@@ -39,10 +40,17 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { PetService } from '../../common/services/pet.service';
 import { CreatePetDto, UpdatePetDto } from './dtos/request.dto';
+import {
+  CreatPetResDto,
+  DeletePetResDto,
+  GetPetResDto,
+  ListPetResDto,
+  UpdatePetResDto,
+  UploadImageResDto,
+} from './dtos/response.dto';
 import { PetOwnershipGuard } from './guards/pet-ownership.guard';
 
 const ENTITY_NAME = 'pet';
-const ENTITY_PLURAL = plural(ENTITY_NAME);
 const ENTITY_PATH = ENTITY_NAME;
 const CONTROLLER_ROUTE_PATH = ENTITY_NAME;
 
@@ -70,15 +78,16 @@ export class PetController {
     private readonly i18n: I18nService<I18nTranslations>,
   ) {}
 
+  @UseInterceptors(ClassSerializerInterceptor)
   @Post(ROUTES.CREATE)
   @HttpCode(HttpStatus.CREATED)
-  @ApiAppCreateSuccessResponse(PetEntity, ENTITY_NAME)
+  @ApiAppCreateSuccessResponse(PetEntitySwagger, ENTITY_NAME)
   async createPet(
     @Body()
     createPetDto: CreatePetDto,
     @Res({ passthrough: true })
     response: ResLocals.FirebaseAuthenticatedRequest,
-  ) {
+  ): Promise<CreatPetResDto> {
     const user_id = response.locals.user_id;
     createPetDto.user_id = user_id;
 
@@ -88,12 +97,12 @@ export class PetController {
       );
     });
 
-    return {
-      [ENTITY_NAME]: pet,
+    return plainToClass(CreatPetResDto, {
+      [ENTITY_NAME]: plainToClass(PetEntity, pet),
       message: this.i18n.t('entity.createSuccess', {
         args: { resource: ENTITY_NAME },
       }),
-    };
+    });
   }
 
   @UseGuards(PetOwnershipGuard)
@@ -104,7 +113,7 @@ export class PetController {
     @Param(REQUEST_PARAM.ENTITY_ID) pet_id: string,
     @Res({ passthrough: true })
     response: ResLocals.FirebaseAuthenticatedRequest,
-  ) {
+  ): Promise<DeletePetResDto> {
     const user_id = response.locals.user_id;
 
     const pet = await this.petService.findOne(pet_id).catch((_) => {
@@ -135,37 +144,39 @@ export class PetController {
         });
     }
 
-    return {
+    return plainToClass(DeletePetResDto, {
       message: this.i18n.t('entity.deleteSuccess', {
         args: { resource: ENTITY_NAME, resource_id: pet_id },
       }),
-    };
+    });
   }
 
   @UseGuards(PetOwnershipGuard)
   @HttpCode(HttpStatus.OK)
   @Get(ROUTES.GET)
-  @ApiAppSuccessResponse(PetEntity, ENTITY_NAME)
-  async getPet(@Param(REQUEST_PARAM.ENTITY_ID) pet_id: string) {
+  @ApiAppSuccessResponse(PetEntitySwagger, ENTITY_NAME)
+  async getPet(
+    @Param(REQUEST_PARAM.ENTITY_ID) pet_id: string,
+  ): Promise<GetPetResDto> {
     const pet = await this.petService.findOne(pet_id).catch((_) => {
       throw new NotFoundException(this.i18n.t('entity.resourceNotFound'));
     });
 
-    return {
+    return plainToClass(GetPetResDto, {
       [ENTITY_NAME]: pet,
       message: this.i18n.t('entity.getResourceSuccess', {
         args: { resource: ENTITY_NAME },
       }),
-    };
+    });
   }
 
   @Get(ROUTES.LIST)
   @HttpCode(HttpStatus.OK)
-  @ApiAppSuccessResponseArrayData(PetEntity)
+  @ApiAppSuccessResponseArrayData(PetEntitySwagger)
   async listPet(
     @Res({ passthrough: true })
     response: ResLocals.FirebaseAuthenticatedRequest,
-  ) {
+  ): Promise<ListPetResDto> {
     const user_id = response.locals.user_id;
 
     const pets = await this.petService.listPet(user_id).catch((_) => {
@@ -179,26 +190,26 @@ export class PetController {
       );
     });
 
-    return {
-      [ENTITY_PLURAL]: pets,
+    return plainToClass(ListPetResDto, {
       message: this.i18n.t('entity.operationSuccess', {
         args: {
           operation: this.i18n.t('operation.list'),
           resource: ENTITY_NAME,
         },
       }),
-    };
+      pets,
+    });
   }
 
   @UseGuards(PetOwnershipGuard)
   @HttpCode(HttpStatus.OK)
   @Patch(ROUTES.UPDATE)
-  @ApiAppSuccessResponse(PetEntity, ENTITY_NAME)
+  @ApiAppSuccessResponse(PetEntitySwagger, ENTITY_NAME)
   async updatePet(
     @Param(REQUEST_PARAM.ENTITY_ID) pet_id: string,
     @Body()
     updatePetDto: UpdatePetDto,
-  ) {
+  ): Promise<UpdatePetResDto> {
     const updatedData = await this.petService
       .update(pet_id, updatePetDto)
       .catch((_) => {
@@ -212,7 +223,7 @@ export class PetController {
         );
       });
 
-    return {
+    return plainToClass(UpdatePetResDto, {
       [ENTITY_NAME]: updatedData,
       message: this.i18n.t('entity.operationSuccess', {
         args: {
@@ -220,7 +231,7 @@ export class PetController {
           resource: ENTITY_NAME,
         },
       }),
-    };
+    });
   }
 
   @UseGuards(PetOwnershipGuard)
@@ -232,7 +243,7 @@ export class PetController {
     description: 'A image of a pet',
     type: FileUploadDto,
   })
-  @ApiAppSuccessResponse(PetEntity, ENTITY_NAME)
+  @ApiAppSuccessResponse(PetEntitySwagger, ENTITY_NAME)
   async uploadPetAvatarImage(
     @UploadedFile(
       new ParseFilePipe({
@@ -257,7 +268,7 @@ export class PetController {
     @Res({ passthrough: true })
     response: ResLocals.FirebaseAuthenticatedRequest,
     @Param(REQUEST_PARAM.ENTITY_ID) pet_id: string,
-  ) {
+  ): Promise<UploadImageResDto> {
     /**
      * File temporary store is out side of try block
      */
@@ -323,7 +334,7 @@ export class PetController {
         );
       });
 
-      return {
+      return plainToClass(UploadImageResDto, {
         data: {
           [ENTITY_NAME]: await this.petService.findOne(pet_id).catch((_) => {
             throw new NotFoundException(this.i18n.t('entity.resourceNotFound'));
@@ -332,7 +343,7 @@ export class PetController {
         message: this.i18n.t('entity.uploadAssociatedFileSuccess', {
           args: { resource: ENTITY_NAME, resource_id: pet_id },
         }),
-      };
+      });
     } catch (err) {
       throw err;
     } finally {
