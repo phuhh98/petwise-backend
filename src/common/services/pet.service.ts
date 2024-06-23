@@ -3,8 +3,8 @@ import { PetEntity } from 'src/common/entities/pet.entity';
 import { BaseServiceAbstract } from 'src/common/services/base/base.abstract.service';
 
 import { IFIleUploadParams } from '../repositories/base/base.abstract.repository';
-import { PetRepository } from '../repositories/pet.repository';
 import { DiaryRepository } from '../repositories/diary.repository';
+import { PetRepository } from '../repositories/pet.repository';
 
 @Injectable()
 export class PetService extends BaseServiceAbstract<PetEntity> {
@@ -13,6 +13,14 @@ export class PetService extends BaseServiceAbstract<PetEntity> {
     private readonly diaryRepository: DiaryRepository,
   ) {
     super(petRepository);
+  }
+
+  async deleteAvatarImage(file_name: string) {
+    return await this.petRepository.deleteFile(file_name);
+  }
+
+  async listPet(user_id: string) {
+    return this.petRepository.listPetByUserId(user_id);
   }
 
   async remove(id: string, user_id: string): Promise<boolean> {
@@ -37,14 +45,6 @@ export class PetService extends BaseServiceAbstract<PetEntity> {
       throw new Error(`Error while clean up diaries for Pet with id ${id}`);
 
     return true;
-  }
-
-  async deleteAvatarImage(file_name: string) {
-    return await this.petRepository.deleteFile(file_name);
-  }
-
-  async listPet(user_id: string) {
-    return this.petRepository.listPetByUserId(user_id);
   }
 
   async uploadAvatarImage({

@@ -1,6 +1,7 @@
 import { Type } from 'class-transformer';
 import {
   IsArray,
+  IsISO8601,
   IsNumber,
   IsObject,
   IsString,
@@ -50,6 +51,12 @@ export class DiaryEntity extends BaseEntity {
   @ValidateNested()
   @Type(() => DiaryNS.DiaryGeneratedAnalysis)
   analysis: DiaryNS.DiaryGeneratedAnalysis;
+
+  /**
+   * Date in ISO 8601 format
+   */
+  @IsISO8601()
+  diary_date: string;
 
   @IsString()
   id: string;

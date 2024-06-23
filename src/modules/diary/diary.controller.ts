@@ -87,6 +87,11 @@ export class DiaryController {
   ) {
     const user_id = response.locals.user_id;
     createDiaryDto.user_id = user_id;
+    /**
+     * Default of diary_date will be the date on server
+     */
+    createDiaryDto.diary_date =
+      createDiaryDto.diary_date ?? new Date().toISOString();
 
     const diary = await this.diaryService.create(createDiaryDto).catch((_) => {
       throw new InternalServerErrorException(

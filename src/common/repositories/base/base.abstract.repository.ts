@@ -1,9 +1,15 @@
 import { Bucket } from '@google-cloud/storage';
-import { CollectionReference, Firestore } from 'firebase-admin/firestore';
+import { isObject } from 'class-validator';
+import {
+  CollectionReference,
+  Firestore,
+  Timestamp,
+} from 'firebase-admin/firestore';
 import { FindManyReturnFormatDto } from 'src/common/dtos/find-many-return.interface';
 import { UploadedFileDto } from 'src/common/dtos/uploaded-file.dto';
 import { BaseEntity } from 'src/common/entities/base.entity';
 import { FirestorageService } from 'src/common/services/firebase/firebase-storage.service';
+import { isTimeStamp } from 'src/common/utils/typeGuards';
 
 import {
   FindAllCondition,
@@ -47,18 +53,54 @@ export abstract class BaseRepositoryAbstract<
       FirebaseFirestore.DocumentData
     >,
   ): Promise<T> {
-    return {
-      ...docSnapshot.data(),
-      id: docSnapshot.id,
-      created_at: docSnapshot.createTime.toDate(),
-      updated_at: docSnapshot.updateTime.toDate(),
-    };
+    let docData = docSnapshot.data();
+
+    /**
+     * Convert key value of Timestamp to ISO 8601 standard format
+     * Recursively
+     * @param data
+     * @returns
+     */
+    function recurMapTimestampToDate<T extends Record<string, Timestamp | any>>(
+      data: T,
+    ) {
+      for (const key in data) {
+        if (isObject(data[key]) && !isTimeStamp(data[key])) {
+          data[key] = recurMapTimestampToDate(data[key]);
+          continue;
+        }
+
+        if (isTimeStamp(data[key])) {
+          data[key] = data[key].toDate();
+        } else {
+          continue;
+        }
+      }
+      return data;
+    }
+
+    function includeIdAndTimestamp<T extends BaseEntity>(data: T) {
+      return {
+        ...data,
+        created_at: docSnapshot.createTime,
+        id: docSnapshot.id,
+        updated_at: docSnapshot.updateTime,
+      };
+    }
+
+    docData = recurMapTimestampToDate(includeIdAndTimestamp(docData));
+
+    return docData;
   }
 
   async create(dto: T): Promise<T> {
     const docRef = await this.collection.add(dto);
 
     return this.parseIdAndTimeStamp(await docRef.get());
+  }
+
+  public async delete(id: string, ..._: unknown[]): Promise<boolean> {
+    return await this.permanentlyDelete(id);
   }
 
   async deleteFile(uniqueBucketFileName: string) {
@@ -126,10 +168,6 @@ export abstract class BaseRepositoryAbstract<
     const docRef = this.collection.doc(id);
     const docData = await this.isDocDataExist(docRef);
     return docData;
-  }
-
-  public async delete(id: string, ...args: unknown[]): Promise<boolean> {
-    return await this.permanentlyDelete(id);
   }
 
   protected async permanentlyDelete(id: string): Promise<boolean> {
