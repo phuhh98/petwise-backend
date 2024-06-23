@@ -8,21 +8,21 @@ export const petProfileJsonParser: FunctionDeclaration = {
                 If could not parse any required arguments to the desired format, omit it it response instead of return unknown`,
   name: 'petProfileJsonParser',
   parameters: {
-    description: 'object which contains detail information from pet breed',
+    description: 'Object which contains detail information from pet breed',
     properties: {
       appearance: {
-        description: 'key base info about the pet appearance',
+        description: 'Key base info about the pet appearance',
         properties: {
           body: {
-            description: "pet's body appearance",
+            description: "Pet's body appearance",
             properties: {
               build: {
-                description: 'body build',
+                description: "Pet's body build",
                 properties: {},
                 type: FunctionDeclarationSchemaType.STRING,
               },
               tail: {
-                description: 'tail size, shape, and furry state',
+                description: 'Tail size, shape, and its furry state',
                 properties: {},
                 type: FunctionDeclarationSchemaType.STRING,
               },
@@ -30,15 +30,15 @@ export const petProfileJsonParser: FunctionDeclaration = {
             type: FunctionDeclarationSchemaType.OBJECT,
           },
           coat: {
-            description: 'description related to its fur or skin',
+            description: 'Description related to its fur or skin',
             properties: {
               colors: {
-                description: 'the pet color from the image',
+                description: "Pet's colors",
                 properties: {},
                 type: FunctionDeclarationSchemaType.STRING,
               },
               type: {
-                description: 'pet appearance, related to its fur or skin',
+                description: "Pet's fur or skin appearance",
                 properties: {},
                 type: FunctionDeclarationSchemaType.STRING,
               },
@@ -46,15 +46,15 @@ export const petProfileJsonParser: FunctionDeclaration = {
             type: FunctionDeclarationSchemaType.OBJECT,
           },
           head: {
-            description: "pet's head appearance",
+            description: "Pet's head appearance",
             properties: {
               ears: {
-                description: 'Ear shape description',
+                description: 'Ears shape description',
                 properties: {},
                 type: FunctionDeclarationSchemaType.STRING,
               },
               eyes: {
-                description: 'Eye shape and color',
+                description: 'Eyes shape and colors',
                 properties: {},
                 type: FunctionDeclarationSchemaType.STRING,
               },
@@ -64,7 +64,7 @@ export const petProfileJsonParser: FunctionDeclaration = {
                 type: FunctionDeclarationSchemaType.STRING,
               },
               shape: {
-                description: 'Shape of the pet head',
+                description: 'Head shape',
                 properties: {},
                 type: FunctionDeclarationSchemaType.STRING,
               },
@@ -72,12 +72,12 @@ export const petProfileJsonParser: FunctionDeclaration = {
             type: FunctionDeclarationSchemaType.OBJECT,
           },
           legs: {
-            description: 'size of its legs',
+            description: 'Size of legs',
             properties: {},
             type: FunctionDeclarationSchemaType.STRING,
           },
           size: {
-            description: 'Size of the pet, coulbe Small, Medium, Large..etc',
+            description: 'Size of the pet',
             properties: {},
             type: FunctionDeclarationSchemaType.STRING,
           },
@@ -85,7 +85,7 @@ export const petProfileJsonParser: FunctionDeclaration = {
         type: FunctionDeclarationSchemaType.OBJECT,
       },
       breed: {
-        description: 'the pet breed',
+        description: 'Pet breed',
         properties: {},
         type: FunctionDeclarationSchemaType.STRING,
       },
@@ -95,8 +95,7 @@ export const petProfileJsonParser: FunctionDeclaration = {
         type: FunctionDeclarationSchemaType.STRING,
       },
       error: {
-        description:
-          'Error message from prompt when it is out of scope of this prompt',
+        description: 'Error message from provided context from error key',
         properties: {},
         type: FunctionDeclarationSchemaType.STRING,
       },
