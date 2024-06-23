@@ -37,9 +37,7 @@ export const petProfileBuilderSystemPrompt =
         exercise:
             needs: Suggested activities to make the pet happy. Example: Daily walks and playtime
             suitable_for: Suggested kind of owners to have this pet breed. Example: Active families, experienced dog owners
-        error:  If you can not regconize which pet is in the picture, return a message state that the picture is unrecognizable or out of the scope of your function and populate it to this field.
-                Case not pet in picture, use this template: __the recognized object from image__ is not a pet and could be use to analyze.
-                Case unrecognizable, use this message: Could not recognize any pet in the image to build profile.
+        error:  Case not pet in picture or unrecognizable: Make joke or sarcarsm in a funny tone -do not offend the reader- and say that user provided something not a pet, given what is the object in the picture too.
                 If there is no issue, let this field be null    
 `);
 
