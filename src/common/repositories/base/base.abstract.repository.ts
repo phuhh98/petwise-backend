@@ -114,36 +114,39 @@ export abstract class BaseRepositoryAbstract<
     condition: FindAllCondition,
     options?: QueryOptions,
   ): Promise<FindManyReturnFormatDto<T>> {
-    let query: ReturnType<CollectionReference<T>['where']>;
+    let queryRef: ReturnType<CollectionReference<T>['where']>;
     for (let i = 0; i < condition.length; i++) {
-      if (!query) {
-        query = this.collection.where(
+      if (!queryRef) {
+        queryRef = this.collection.where(
           condition[i].fieldPath,
           condition[i].opStr,
           condition[i].value,
         );
-        continue;
+      } else {
+        queryRef = queryRef.where(
+          condition[i].fieldPath,
+          condition[i].opStr,
+          condition[i].value,
+        );
       }
-      query.where(
-        condition[i].fieldPath,
-        condition[i].opStr,
-        condition[i].value,
-      );
     }
 
     if (options?.orderBy) {
-      query.orderBy(options.orderBy.fieldPath, options.orderBy.directionStr);
+      queryRef = queryRef.orderBy(
+        options.orderBy.fieldPath,
+        options.orderBy.directionStr,
+      );
     }
 
     if (options?.limit) {
-      query.limit(options.limit);
+      queryRef = queryRef.limit(options.limit);
     }
 
     if (options?.offSet) {
-      query.offset(options.offSet);
+      queryRef = queryRef.offset(options.offSet);
     }
 
-    const querySnapshot = await query.get();
+    const querySnapshot = await queryRef.get();
 
     if (!querySnapshot.size) {
       return {

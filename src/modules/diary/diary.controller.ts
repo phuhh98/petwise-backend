@@ -13,6 +13,7 @@ import {
   ParseFilePipe,
   Patch,
   Post,
+  Query,
   Res,
   UploadedFile,
   UseGuards,
@@ -38,11 +39,7 @@ import { I18nTranslations } from 'src/generated/i18n.generated';
 import { ResLocals } from 'src/interfaces/express.interface';
 import { v4 as uuidv4 } from 'uuid';
 
-import {
-  CreateDiaryDto,
-  ListDiaryDto,
-  UpdateDiaryDto,
-} from './dtos/request.dto';
+import { CreateDiaryDto, UpdateDiaryDto } from './dtos/request.dto';
 import {
   CreatDiaryResDto,
   DeleteDiaryResDto,
@@ -52,7 +49,7 @@ import {
   UploadImageResDto,
 } from './dtos/response.dto';
 import { DiaryOwnershipGuard } from './guards/diary-ownership.guard';
-import { PetPayloadOwnershipGuard } from './guards/pet-payload-ownership.guard';
+import { PetQueryOwnershipGuard } from './guards/pet-payload-ownership.guard';
 
 const ENTITY_NAME = 'diary';
 const ENTITY_PATH = ENTITY_NAME;
@@ -84,7 +81,7 @@ export class DiaryController {
 
   @Post(ROUTES.CREATE)
   @HttpCode(HttpStatus.CREATED)
-  @UseGuards(PetPayloadOwnershipGuard)
+  @UseGuards(PetQueryOwnershipGuard)
   @ApiAppCreateSuccessResponse(DiaryEntitySwagger, ENTITY_NAME)
   async createDiary(
     @Body()
@@ -173,18 +170,17 @@ export class DiaryController {
     });
   }
 
-  @UseGuards(PetPayloadOwnershipGuard)
+  @UseGuards(PetQueryOwnershipGuard)
   @Get(ROUTES.LIST)
   @HttpCode(HttpStatus.OK)
   @ApiAppSuccessResponseArrayData(DiaryEntitySwagger)
   async listDiaryByPetId(
     @Res({ passthrough: true })
     response: ResLocals.FirebaseAuthenticatedRequest,
-    @Body()
-    listDiary: ListDiaryDto,
+    @Query('pet_id')
+    pet_id: string,
   ): Promise<ListDiaryResDto> {
     const user_id = response.locals.user_id;
-    const pet_id = listDiary.pet_id;
 
     const diaries = await this.diaryService
       .listDiary({ pet_id, user_id })

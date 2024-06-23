@@ -17,7 +17,7 @@ import { ResLocals } from 'src/interfaces/express.interface';
  * Required to include FirebaseAuthenticationGuard before to let user_id available in response.locals
  */
 @Injectable()
-export class PetPayloadOwnershipGuard implements CanActivate {
+export class PetQueryOwnershipGuard implements CanActivate {
   constructor(
     private readonly petService: PetService,
     private readonly i18n: I18nService<I18nTranslations>,
@@ -25,16 +25,24 @@ export class PetPayloadOwnershipGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context
       .switchToHttp()
-      .getRequest<Request<object, { pet_id: string }>>();
+      .getRequest<
+        Request<object, object, { pet_id?: string }, { pet_id?: string }>
+      >();
     const response = context
       .switchToHttp()
       .getResponse<ResLocals.FirebaseAuthenticatedRequest>();
 
     const user_id = response.locals.user_id;
-    const pet_id = request.body.pet_id;
+    /**
+     * Take priority from query than params
+     */
+    const pet_id = request.body.pet_id ?? request.query.pet_id;
 
+    /**
+     * Pass if no pet_id provided
+     */
     if (!pet_id) {
-      throw new BadRequestException();
+      return true;
     }
 
     const pet = await this.petService.findOne(pet_id).catch((_) => {

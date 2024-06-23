@@ -10,5 +10,3 @@ export class UpdateDiaryDto extends IntersectionType(
   PickType(DiaryEntity, ['analysis']),
   PartialType(PickType(DiaryEntity, ['diary_date'])),
 ) {}
-
-export class ListDiaryDto extends PickType(DiaryEntity, ['pet_id']) {}
