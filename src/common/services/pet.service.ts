@@ -1,10 +1,13 @@
 import { Injectable } from '@nestjs/common';
-import { PetEntity } from 'src/common/entities/pet.entity';
+import { PetEntity, PetSortableField } from 'src/common/entities/pet.entity';
 import { BaseServiceAbstract } from 'src/common/services/base/base.abstract.service';
 
+import { IListSortAndPaging } from '../dtos/common-request.dto';
 import { IFIleUploadParams } from '../repositories/base/base.abstract.repository';
+import { QueryOptions } from '../repositories/base/base.interface.repository';
 import { DiaryRepository } from '../repositories/diary.repository';
 import { PetRepository } from '../repositories/pet.repository';
+import { itemAndPageToLimitAndOffSet } from '../utils/converter';
 
 @Injectable()
 export class PetService extends BaseServiceAbstract<PetEntity> {
@@ -19,8 +22,27 @@ export class PetService extends BaseServiceAbstract<PetEntity> {
     return await this.petRepository.deleteFile(file_name);
   }
 
-  async listPet(user_id: string) {
-    return this.petRepository.listPetByUserId(user_id);
+  async listPet(
+    user_id: string,
+    options: IListSortAndPaging<PetSortableField>,
+  ) {
+    const pagingSetting: Omit<QueryOptions, 'orderBy'> =
+      options.max_items || options.page
+        ? itemAndPageToLimitAndOffSet(options.max_items, options.page)
+        : {};
+
+    const sortingSetting: Pick<QueryOptions, 'orderBy'> = options.sort
+      .sortKey && {
+      orderBy: {
+        directionStr: options.sort.order,
+        fieldPath: options.sort.sortKey,
+      },
+    };
+
+    return this.petRepository.listPetByUserId(user_id, {
+      ...pagingSetting,
+      ...sortingSetting,
+    });
   }
 
   async remove(id: string, user_id: string): Promise<boolean> {

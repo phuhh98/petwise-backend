@@ -159,3 +159,7 @@ export class PetEntity extends BaseEntity {
 }
 
 export class PetEntitySwagger extends OmitType(PetEntity, ['user_id']) {}
+
+export enum PetSortableField {
+  'name' = 'name',
+}

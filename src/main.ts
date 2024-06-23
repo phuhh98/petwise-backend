@@ -6,10 +6,14 @@ import { configSwagger } from './common/configs/api-doc.config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
-    logger: ['debug'],
+    logger: ['verbose'],
   });
   app.useGlobalPipes(
     new ValidationPipe({
+      transform: true,
+      transformOptions: {
+        enableImplicitConversion: true,
+      },
       whitelist: true,
     }),
   );

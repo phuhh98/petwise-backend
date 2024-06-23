@@ -14,6 +14,7 @@ import {
   ParseFilePipe,
   Patch,
   Post,
+  Query,
   Res,
   UploadedFile,
   UseGuards,
@@ -39,7 +40,11 @@ import { ResLocals } from 'src/interfaces/express.interface';
 import { v4 as uuidv4 } from 'uuid';
 
 import { PetService } from '../../common/services/pet.service';
-import { CreatePetDto, UpdatePetDto } from './dtos/request.dto';
+import {
+  CreatePetDto,
+  ListPetQueryDto,
+  UpdatePetDto,
+} from './dtos/request.dto';
 import {
   CreatPetResDto,
   DeletePetResDto,
@@ -176,19 +181,29 @@ export class PetController {
   async listPet(
     @Res({ passthrough: true })
     response: ResLocals.FirebaseAuthenticatedRequest,
+    @Query() query: ListPetQueryDto,
   ): Promise<ListPetResDto> {
     const user_id = response.locals.user_id;
 
-    const pets = await this.petService.listPet(user_id).catch((_) => {
-      throw new InternalServerErrorException(
-        this.i18n.t('entity.operationOnResourceError', {
-          args: {
-            operation: this.i18n.t('operation.list'),
-            resource: ENTITY_NAME,
-          },
-        }),
-      );
-    });
+    const pets = await this.petService
+      .listPet(user_id, {
+        max_items: query.max_items,
+        page: query.page,
+        sort: {
+          order: query.order,
+          sortKey: query.orderBy,
+        },
+      })
+      .catch((_) => {
+        throw new InternalServerErrorException(
+          this.i18n.t('entity.operationOnResourceError', {
+            args: {
+              operation: this.i18n.t('operation.list'),
+              resource: ENTITY_NAME,
+            },
+          }),
+        );
+      });
 
     return plainToClass(ListPetResDto, {
       message: this.i18n.t('entity.operationSuccess', {

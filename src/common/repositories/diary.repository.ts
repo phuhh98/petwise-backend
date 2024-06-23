@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { DiaryEntity } from 'src/common/entities/diary.entity';
 import { BaseRepositoryAbstract } from 'src/common/repositories/base/base.abstract.repository';
 import {
-  FindAllCondition,
   IBaseRepository,
+  QueryCondition,
   QueryOptions,
 } from 'src/common/repositories/base/base.interface.repository';
 import { FirestorageService } from 'src/common/services/firebase/firebase-storage.service';
@@ -29,7 +29,7 @@ export class DiaryRepository extends BaseRepositoryAbstract<DiaryEntity> {
     searchParams: IListDiaryParams,
   ): Promise<ReturnType<IBaseRepository<DiaryEntity>['findAll']>> {
     const values = searchParams.values;
-    const searchCondition: FindAllCondition = [
+    const searchCondition: QueryCondition[] = [
       { fieldPath: 'user_id', opStr: '==', value: values.user_id },
     ];
     if (!!values.pet_id) {

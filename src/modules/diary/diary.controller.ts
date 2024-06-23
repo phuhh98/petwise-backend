@@ -39,7 +39,11 @@ import { I18nTranslations } from 'src/generated/i18n.generated';
 import { ResLocals } from 'src/interfaces/express.interface';
 import { v4 as uuidv4 } from 'uuid';
 
-import { CreateDiaryDto, UpdateDiaryDto } from './dtos/request.dto';
+import {
+  CreateDiaryDto,
+  ListDiaryQueryDto,
+  UpdateDiaryDto,
+} from './dtos/request.dto';
 import {
   CreatDiaryResDto,
   DeleteDiaryResDto,
@@ -177,13 +181,23 @@ export class DiaryController {
   async listDiaryByPetId(
     @Res({ passthrough: true })
     response: ResLocals.FirebaseAuthenticatedRequest,
-    @Query('pet_id')
-    pet_id: string,
+    @Query()
+    query: ListDiaryQueryDto,
   ): Promise<ListDiaryResDto> {
     const user_id = response.locals.user_id;
 
     const diaries = await this.diaryService
-      .listDiary({ pet_id, user_id })
+      .listDiary(
+        { pet_id: query.pet_id, user_id },
+        {
+          max_items: query.max_items,
+          page: query.page,
+          sort: {
+            order: query.order,
+            sortKey: query.orderBy,
+          },
+        },
+      )
       .catch((_) => {
         throw new InternalServerErrorException(
           this.i18n.t('entity.operationOnResourceError', {

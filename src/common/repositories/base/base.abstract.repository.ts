@@ -9,11 +9,12 @@ import { FindManyReturnFormatDto } from 'src/common/dtos/find-many-return.interf
 import { UploadedFileDto } from 'src/common/dtos/uploaded-file.dto';
 import { BaseEntity } from 'src/common/entities/base.entity';
 import { FirestorageService } from 'src/common/services/firebase/firebase-storage.service';
+import { limitAndOffSetToMaxItemsAndPage } from 'src/common/utils/converter';
 import { isTimeStamp } from 'src/common/utils/typeGuards';
 
 import {
-  FindAllCondition,
   IBaseRepository,
+  QueryCondition,
   QueryOptions,
 } from './base.interface.repository';
 
@@ -111,22 +112,22 @@ export abstract class BaseRepositoryAbstract<
   }
 
   async findAll(
-    condition: FindAllCondition,
+    conditions: QueryCondition[],
     options?: QueryOptions,
   ): Promise<FindManyReturnFormatDto<T>> {
     let queryRef: ReturnType<CollectionReference<T>['where']>;
-    for (let i = 0; i < condition.length; i++) {
+    for (let i = 0; i < conditions.length; i++) {
       if (!queryRef) {
         queryRef = this.collection.where(
-          condition[i].fieldPath,
-          condition[i].opStr,
-          condition[i].value,
+          conditions[i].fieldPath,
+          conditions[i].opStr,
+          conditions[i].value,
         );
       } else {
         queryRef = queryRef.where(
-          condition[i].fieldPath,
-          condition[i].opStr,
-          condition[i].value,
+          conditions[i].fieldPath,
+          conditions[i].opStr,
+          conditions[i].value,
         );
       }
     }
@@ -150,6 +151,7 @@ export abstract class BaseRepositoryAbstract<
 
     if (!querySnapshot.size) {
       return {
+        ...limitAndOffSetToMaxItemsAndPage(options.limit, options.offSet),
         count: 0,
         items: [],
       };
@@ -162,6 +164,7 @@ export abstract class BaseRepositoryAbstract<
     );
 
     return {
+      ...limitAndOffSetToMaxItemsAndPage(options.limit, options.offSet),
       count: querySnapshot.size,
       items: docs,
     };

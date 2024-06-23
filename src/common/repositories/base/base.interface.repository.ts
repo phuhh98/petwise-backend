@@ -9,7 +9,7 @@ export abstract class IBaseRepository<T> {
   abstract create(dto: T): Promise<T>;
 
   abstract findAll(
-    condition: FindAllCondition,
+    conditions: QueryCondition[],
     options?: QueryOptions,
   ): Promise<FindManyReturnFormatDto<T>>;
 
@@ -30,7 +30,6 @@ export type QueryCondition = {
   value: any;
 };
 
-export type FindAllCondition = QueryCondition[];
 export type QueryOptions = {
   limit?: number;
   offSet?: number;

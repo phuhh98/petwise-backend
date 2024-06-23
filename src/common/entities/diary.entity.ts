@@ -75,3 +75,7 @@ export class DiaryEntity extends BaseEntity {
 }
 
 export class DiaryEntitySwagger extends OmitType(DiaryEntity, ['user_id']) {}
+
+export enum DiarySortableField {
+  'diary_date' = 'diary_date',
+}
