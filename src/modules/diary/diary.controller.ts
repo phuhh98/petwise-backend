@@ -31,7 +31,10 @@ import {
   ApiAppSuccessResponse,
   ApiAppSuccessResponseArrayData,
 } from 'src/common/decorators/swagger/generic-response.decorator';
-import { EmptyDto, FileUploadDto } from 'src/common/dtos/common-request.dto';
+import {
+  EmptyDto,
+  FileUploadDtoSwagger,
+} from 'src/common/dtos/common-request.dto';
 import { DiaryEntitySwagger } from 'src/common/entities/diary.entity';
 import { FirebaseAuthenticationGuard } from 'src/common/guards/firebase-authentication.guard';
 import { DiaryService } from 'src/common/services/diary.service';
@@ -260,7 +263,7 @@ export class DiaryController {
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     description: 'A image of a pet',
-    type: FileUploadDto,
+    type: FileUploadDtoSwagger,
   })
   @ApiAppSuccessResponse(DiaryEntitySwagger, ENTITY_NAME)
   async uploadDiaryImage(

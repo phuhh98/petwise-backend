@@ -48,10 +48,11 @@ export class LLMService {
     });
   }
 
-  async embeddingText(chunk: string) {
-    return await this.embeddingModel(TaskType.RETRIEVAL_DOCUMENT).embedQuery(
-      chunk,
-    );
+  async embeddingText(chunk: string, subject: string) {
+    return await this.embeddingModel(
+      TaskType.RETRIEVAL_DOCUMENT,
+      subject,
+    ).embedQuery(chunk);
   }
 
   async geolocation(question: string) {

@@ -8,5 +8,8 @@
   "imageMetadataFailed": "Get Image metadata failed",
 
   "generationError": "Error while generating content",
-  "generationSuccess": "Generate content successfully"
+  "generationSuccess": "Generate content successfully",
+
+  "petCareDocsDuplicate": "File {file_name} already uploaded",
+  "petCareDocsUploadComplete": "File(s) has been uploaded successfully"
 }

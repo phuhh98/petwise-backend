@@ -38,6 +38,8 @@ export type I18nTranslations = {
         "imageMetadataFailed": string;
         "generationError": string;
         "generationSuccess": string;
+        "petCareDocsDuplicate": string;
+        "petCareDocsUploadComplete": string;
     };
     "operation": {
         "create": string;

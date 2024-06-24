@@ -1,5 +1,7 @@
 import { FileState } from '@google/generative-ai/files';
+import { PDFLoader } from '@langchain/community/document_loaders/fs/pdf';
 import {
+  BadRequestException,
   Body,
   Controller,
   FileTypeValidator,
@@ -11,24 +13,36 @@ import {
   Post,
   UnprocessableEntityException,
   UploadedFile,
+  UploadedFiles,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { AnyFilesInterceptor, FileInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
+import { FieldValue } from 'firebase-admin/firestore';
+import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
+import _ from 'lodash';
 import { I18nService } from 'nestjs-i18n';
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
+import { MAX_BATCH_SIZE } from 'src/common/constants/firebase.constant';
 import { REGEX_PATTERN } from 'src/common/constants/regex.constant';
 import { ApiAppSuccessResponse } from 'src/common/decorators/swagger/generic-response.decorator';
-import { FileUploadDto } from 'src/common/dtos/common-request.dto';
+import { FileUploadDtoSwagger } from 'src/common/dtos/common-request.dto';
 import { DiaryNS } from 'src/common/entities/diary.entity';
 import { PetProfileNS } from 'src/common/entities/pet.entity';
 import { FirebaseAuthenticationGuard } from 'src/common/guards/firebase-authentication.guard';
+import { PetCareEmbeddingService } from 'src/common/services/petcare-embedding.service';
+import { PetCareUploadedDocsService } from 'src/common/services/petcare-uploaded-docs.service';
+import { createSHA256 } from 'src/common/utils/converter';
 import { I18nTranslations } from 'src/generated/i18n.generated';
 import { v4 as uuidv4 } from 'uuid';
 
-import { TravelAssitantQueryDto } from './dtos/request.dto';
+import {
+  EmbeddingMultiFileUploadDtoSwagger,
+  EmbeddingUploadBodyDto,
+  TravelAssitantQueryDto,
+} from './dtos/request.dto';
 import { TravelAssisstantResDto } from './dtos/response.dto';
 import { GooleAIFileServiceWrapper } from './langchain/googleServices/googleFileUpload.service';
 import { LLMService } from './llm.service';
@@ -37,11 +51,13 @@ const CONTROLLER_ROUTE_PATH = 'llm';
 
 enum REQUEST_PARAM {
   FILE_FIELD_NAME = 'file',
+  MULTIPLE_FILES_FIELD_NAME = 'files',
 }
 
 enum ROUTES {
   PET_DIARY_BUILDER = 'pet-diary-builder',
   PET_PROFILE_BUILDER = 'pet-profile-builder',
+  PETCARE_DOCUMENT_UPLOAD = 'petcare-documents',
   TRAVEL_ASSISTANT = 'travel-assistant',
 }
 
@@ -54,14 +70,172 @@ export class LLMController {
     private readonly llmService: LLMService,
     private readonly googleFileService: GooleAIFileServiceWrapper,
     private readonly i18n: I18nService<I18nTranslations>,
+    private readonly petCareEmbeddingService: PetCareEmbeddingService,
+    private readonly petCareUploadedDocsService: PetCareUploadedDocsService,
   ) {}
 
-  @Post('/embedding')
+  @Post(ROUTES.PETCARE_DOCUMENT_UPLOAD)
   @HttpCode(HttpStatus.OK)
-  async embedding(@Body() query: TravelAssitantQueryDto) {
-    return {
-      data: await this.llmService.embeddingText(query.question),
-    };
+  @UseInterceptors(AnyFilesInterceptor())
+  // @ApiAppSuccessResponse()
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    description: 'Unstructure data about petcare',
+    type: EmbeddingMultiFileUploadDtoSwagger,
+  })
+  async petCareUnstructureFileUpload(
+    @UploadedFiles(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({
+            /**
+             * 50MB in bytes
+             */
+            maxSize: 150 * 1024 * 1024,
+          }),
+          new FileTypeValidator({
+            fileType: REGEX_PATTERN.EMBEDDING_SUPPORT_DOCUMENT_MIMETYPE,
+          }),
+        ],
+      }),
+    )
+    files: Array<Express.Multer.File>,
+    @Body()
+    body: EmbeddingUploadBodyDto,
+  ) {
+    /**
+     * File temporary store is out side of try block
+     */
+    const TEMP_FILE_PROPS: {
+      fileName: string;
+      filePath: string;
+      originalname: string;
+      sha256: string;
+    }[] = [];
+    await Promise.all(
+      files.map(async (file) => {
+        const tempFileName = `${uuidv4()}`;
+        const tempFilePath = path.resolve(__dirname, tempFileName);
+        await fs.writeFile(tempFilePath, file.buffer).catch((_) => {
+          throw new InternalServerErrorException(
+            this.i18n.t('app.preUploadError'),
+          );
+        });
+
+        TEMP_FILE_PROPS.push({
+          fileName: tempFileName,
+          filePath: tempFilePath,
+          originalname: file.originalname,
+          sha256: '',
+        });
+      }),
+    );
+
+    const UPLOADING_SUBJECT = body.subject;
+
+    try {
+      /**
+       * Step 1: create SHA for each temporary document and try to find it in petCareUploadedDocsRepository
+       * if exist, fire a UnprocessableEntity with already uploaded file in the payload with the file name
+       * else, create record to track all the uploaded files
+       */
+
+      await Promise.all(
+        TEMP_FILE_PROPS.map(async (fileProps, index) => {
+          const fileSHA256 = createSHA256(
+            await fs.readFile(fileProps.filePath),
+          );
+          const existDocs = await this.petCareUploadedDocsService.findAll([
+            { fieldPath: 'sha256_hash', opStr: '==', value: fileSHA256 },
+          ]);
+          if (existDocs.count > 0) {
+            throw new BadRequestException(
+              this.i18n.t('llm.petCareDocsDuplicate', {
+                args: { file_name: fileProps.originalname },
+              }),
+            );
+          } else {
+            TEMP_FILE_PROPS.splice(index, 1, {
+              ...fileProps,
+              sha256: fileSHA256,
+            });
+          }
+        }),
+      );
+
+      /**
+       * Step 2: split documents into chunks
+       */
+      const splitter = new RecursiveCharacterTextSplitter({
+        /**
+         * TODO: Adjust these value to get better result in relevant search
+         */
+        chunkOverlap: 1200,
+        chunkSize: 3000,
+      });
+
+      await Promise.all(
+        /**
+         * Process file one by one
+         */
+        TEMP_FILE_PROPS.map(async (tempFileProps) => {
+          const fileDataLoader = new PDFLoader(tempFileProps.filePath, {
+            parsedItemSeparator: '',
+            splitPages: false,
+          });
+
+          const documents = await fileDataLoader.load();
+
+          const docChunks = await splitter.splitDocuments(documents);
+          const docChunkBatches = _.chunk(docChunks, MAX_BATCH_SIZE);
+
+          /**
+           * Step 3: call model to turn to vector and store results
+           */
+          await Promise.all(
+            docChunkBatches.map(async (chunkBatch) => {
+              const embeddingBatch = await Promise.all(
+                chunkBatch.map(async (splittedDocument) => {
+                  return {
+                    chunk: splittedDocument.pageContent,
+                    embedding: FieldValue.vector(
+                      await this.llmService.embeddingText(
+                        splittedDocument.pageContent,
+                        UPLOADING_SUBJECT,
+                      ),
+                    ) as unknown as number[],
+                  };
+                }),
+              );
+
+              await this.petCareEmbeddingService.createMany(embeddingBatch);
+            }),
+          );
+
+          await this.petCareUploadedDocsService.create({
+            metadata: {
+              original_file_name: tempFileProps.originalname,
+              subject: UPLOADING_SUBJECT,
+            },
+            sha256_hash: tempFileProps.sha256,
+          });
+        }),
+      );
+
+      return {
+        message: this.i18n.t('llm.petCareDocsUploadComplete'),
+      };
+    } finally {
+      await Promise.all(
+        TEMP_FILE_PROPS.map(async (tempFileProps) => {
+          await fs.rm(tempFileProps.filePath).catch((_) => {
+            throw new InternalServerErrorException(
+              this.i18n.t('app.clearResourceError'),
+            );
+          });
+        }),
+      );
+    }
   }
 
   @Post(ROUTES.PET_DIARY_BUILDER)
@@ -71,7 +245,7 @@ export class LLMController {
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     description: 'A video of a  pet',
-    type: FileUploadDto,
+    type: FileUploadDtoSwagger,
   })
   async petDiaryBuilder(
     @UploadedFile(
@@ -190,7 +364,7 @@ export class LLMController {
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     description: 'A image of a pet',
-    type: FileUploadDto,
+    type: FileUploadDtoSwagger,
   })
   async petProfileBuilder(
     @UploadedFile(

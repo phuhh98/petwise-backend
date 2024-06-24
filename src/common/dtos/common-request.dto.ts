@@ -4,7 +4,7 @@ import { OrderByDirection } from 'firebase-admin/firestore';
 
 import { OrderDirection } from '../constants/query.constant';
 
-export class FileUploadDto {
+export class FileUploadDtoSwagger {
   @ApiProperty({ format: 'binary', type: 'string' })
   file: any;
 }

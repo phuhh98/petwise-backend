@@ -10,10 +10,16 @@ export abstract class BaseServiceAbstract<T extends BaseEntity>
 {
   constructor(private readonly repository: BaseRepositoryAbstract<T>) {}
 
-  async create(create_dto: T | any): Promise<T> {
-    return await this.repository.create(create_dto).catch((err) => {
+  async create(createDto: Partial<T>): Promise<T> {
+    return await this.repository.create(createDto as T).catch((err) => {
       throw err;
     });
+  }
+
+  async createMany(
+    createManyDto: Omit<T, 'created_at' | 'id' | 'updated_at'>[],
+  ): Promise<boolean> {
+    return await this.repository.createMany(createManyDto);
   }
 
   async findAll(

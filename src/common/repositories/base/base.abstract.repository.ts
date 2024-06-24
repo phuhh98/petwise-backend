@@ -5,6 +5,8 @@ import {
   Firestore,
   Timestamp,
 } from 'firebase-admin/firestore';
+import _ from 'lodash';
+import { MAX_BATCH_SIZE } from 'src/common/constants/firebase.constant';
 import { FindManyReturnFormatDto } from 'src/common/dtos/find-many-return.interface';
 import { UploadedFileDto } from 'src/common/dtos/uploaded-file.dto';
 import { BaseEntity } from 'src/common/entities/base.entity';
@@ -100,6 +102,35 @@ export abstract class BaseRepositoryAbstract<
     return this.parseIdAndTimeStamp(await docRef.get());
   }
 
+  /**
+   * This will only return boolean, batch write is too many operation
+   * and cost another read operation is quite waste of bandwidth
+   * @param dtos
+   */
+
+  async createMany(
+    dtos: Omit<T, 'created_at' | 'id' | 'updated_at'>[],
+  ): Promise<boolean> {
+    /**
+     * Firestore max batch size is 500 operations per batch
+     * https://firebase.google.com/docs/firestore/manage-data/transactions#batched-writes
+     */
+    const chunks = _.chunk(dtos, MAX_BATCH_SIZE);
+
+    await Promise.all(
+      chunks.map(async (batchOfItems) => {
+        const batch = this.fireStore.batch();
+        batchOfItems.forEach(async (item) => {
+          const docRef = this.collection.doc();
+          batch.set(docRef, item);
+        });
+        await batch.commit();
+      }),
+    );
+
+    return true;
+  }
+
   public async delete(id: string, ..._: unknown[]): Promise<boolean> {
     return await this.permanentlyDelete(id);
   }
@@ -113,7 +144,7 @@ export abstract class BaseRepositoryAbstract<
 
   async findAll(
     conditions: QueryCondition[],
-    options?: QueryOptions,
+    options: QueryOptions = {},
   ): Promise<FindManyReturnFormatDto<T>> {
     let queryRef: ReturnType<CollectionReference<T>['where']>;
     for (let i = 0; i < conditions.length; i++) {

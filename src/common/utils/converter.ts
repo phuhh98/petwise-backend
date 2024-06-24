@@ -38,3 +38,9 @@ export function limitAndOffSetToMaxItemsAndPage(
     page: Math.ceil(offSet / limit) + 1,
   };
 }
+
+import { BinaryLike, createHash } from 'node:crypto';
+
+export function createSHA256(data: BinaryLike) {
+  return createHash('sha256').update(data).digest('hex');
+}

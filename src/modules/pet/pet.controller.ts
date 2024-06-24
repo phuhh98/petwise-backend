@@ -32,7 +32,10 @@ import {
   ApiAppSuccessResponse,
   ApiAppSuccessResponseArrayData,
 } from 'src/common/decorators/swagger/generic-response.decorator';
-import { EmptyDto, FileUploadDto } from 'src/common/dtos/common-request.dto';
+import {
+  EmptyDto,
+  FileUploadDtoSwagger,
+} from 'src/common/dtos/common-request.dto';
 import { PetEntity, PetEntitySwagger } from 'src/common/entities/pet.entity';
 import { FirebaseAuthenticationGuard } from 'src/common/guards/firebase-authentication.guard';
 import { I18nTranslations } from 'src/generated/i18n.generated';
@@ -256,7 +259,7 @@ export class PetController {
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     description: 'A image of a pet',
-    type: FileUploadDto,
+    type: FileUploadDtoSwagger,
   })
   @ApiAppSuccessResponse(PetEntitySwagger, ENTITY_NAME)
   async uploadPetAvatarImage(
