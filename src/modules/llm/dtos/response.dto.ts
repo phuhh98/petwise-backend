@@ -18,7 +18,7 @@ export class TravelAssisstantResDto {
   answer: string;
 
   @ApiProperty()
-  location: GeolocationResDto;
+  location: GeolocationResDto | any;
 }
 
 export class PetDiaryBuilderResDto extends DiaryNS.DiaryGeneratedAnalysis {}

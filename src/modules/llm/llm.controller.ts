@@ -1,4 +1,4 @@
-import { FileState } from '@google/generative-ai/files';
+import { FileState } from '@google/generative-ai/server';
 import { PDFLoader } from '@langchain/community/document_loaders/fs/pdf';
 import {
   BadRequestException,

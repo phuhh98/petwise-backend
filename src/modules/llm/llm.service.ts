@@ -8,26 +8,22 @@ import {
 import { Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ProviderTokens } from 'src/common/constants/provider-token.constant';
-
-import { TravelAssitantQueryDto } from './dtos/request.dto';
 import {
-  GeolocationResDto,
-  PetDiaryBuilderResDto,
-  PetProfileBuilderResDto,
-  TravelAssisstantResDto,
-} from './dtos/response.dto';
-import { geolocationParser } from './langchain/gemini_tools/geolocationParser';
-import { petDiaryJsonParser } from './langchain/gemini_tools/petDiaryJsonParser';
-import { petProfileJsonParser } from './langchain/gemini_tools/petProfileJsonParser';
-import { GoogleCustomJSONOutputParser } from './langchain/outputParser/geminiJSONOutputParser';
-import {
-  geolocationPrompt,
+  petDiaryBuilderHumanMessage,
   petDiaryBuilderPrompt,
+  petDiaryOutputParser,
+} from 'src/modules/llm/langchain/prompts/petDiaryBuilderPrompts';
+import {
   petProfileBuilderPrompt,
-  travelAssistantPrompt,
-} from './langchain/prompts';
-import { petDiaryBuilderHumanMessage } from './langchain/prompts/messageComponents/petDiaryBuilderPrompts';
-import { petProfilebuilderHumanMessage } from './langchain/prompts/messageComponents/petProfileBuilderPrompts';
+  petProfileOutputParser,
+  petProfilebuilderHumanMessage,
+} from 'src/modules/llm/langchain/prompts/petProfileBuilderPrompts';
+
+import {
+  geoLocationOutputParser,
+  geolocationPrompt,
+} from './langchain/prompts/geolocationSystemPrompt';
+import { travelAssistantPrompt } from './langchain/prompts/travelAssistantSystemPrompt';
 
 @Injectable()
 export class LLMService {
@@ -57,26 +53,25 @@ export class LLMService {
 
   async geolocation(question: string) {
     const geolocationChain = geolocationPrompt
-      .pipe(
-        this.geminiModel.bind({
-          tools: [{ functionDeclarations: [geolocationParser] }],
-        }),
-      )
-      .pipe<GeolocationResDto>(new GoogleCustomJSONOutputParser());
+      .pipe(this.geminiModel)
+      .pipe(geoLocationOutputParser);
 
     const travelAssitantChain = travelAssistantPrompt
       .pipe(this.geminiModel)
       .pipe(new StringOutputParser());
 
     const master = RunnableMap.from<
-      TravelAssitantQueryDto,
-      TravelAssisstantResDto
+      Parameters<typeof geolocationChain.invoke>[0] &
+        Parameters<typeof travelAssistantPrompt.invoke>[0]
     >({
       answer: travelAssitantChain,
       location: geolocationChain,
     });
 
-    return await master.invoke({ question });
+    return await master.invoke({
+      format_instructions: geoLocationOutputParser.getFormatInstructions(),
+      question,
+    });
   }
 
   async petDiaryBuilder({
@@ -89,14 +84,11 @@ export class LLMService {
     pet_profile?: string;
   }) {
     const petDiaryBuilderChain = petDiaryBuilderPrompt
-      .pipe(
-        this.geminiModel.bind({
-          tools: [{ functionDeclarations: [petDiaryJsonParser] }],
-        }),
-      )
-      .pipe<PetDiaryBuilderResDto>(new GoogleCustomJSONOutputParser());
+      .pipe(this.geminiModel)
+      .pipe(petDiaryOutputParser);
 
     return await petDiaryBuilderChain.invoke({
+      format_instructions: petDiaryOutputParser.getFormatInstructions(),
       message: petDiaryBuilderHumanMessage({ fileUri, mimeType }),
       pet_profile,
     });
@@ -110,14 +102,11 @@ export class LLMService {
     mimeType: string;
   }) {
     const petProfileBuilderChain = petProfileBuilderPrompt
-      .pipe(
-        this.geminiModel.bind({
-          tools: [{ functionDeclarations: [petProfileJsonParser] }],
-        }),
-      )
-      .pipe<PetProfileBuilderResDto>(new GoogleCustomJSONOutputParser());
+      .pipe(this.geminiModel)
+      .pipe(petProfileOutputParser);
 
     return await petProfileBuilderChain.invoke({
+      format_instructions: petProfileOutputParser.getFormatInstructions(),
       message: petProfilebuilderHumanMessage({ fileUri, mimeType }),
     });
   }

@@ -1,4 +1,4 @@
-import { GoogleAIFileManager } from '@google/generative-ai/files';
+import { GoogleAIFileManager } from '@google/generative-ai/server';
 import { Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ProviderTokens } from 'src/common/constants/provider-token.constant';
