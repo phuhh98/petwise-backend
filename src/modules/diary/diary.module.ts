@@ -7,7 +7,7 @@ import { DiaryController } from './diary.controller';
 
 @Module({
   controllers: [DiaryController],
-  exports: [DiaryService],
+  exports: [DiaryService, DiaryRepository],
   imports: [PetModule],
   providers: [DiaryService, DiaryRepository],
 })

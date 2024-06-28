@@ -1,6 +1,5 @@
 import { FindManyReturnFormatDto } from 'src/common/dtos/find-many-return.interface';
 import { BaseEntity } from 'src/common/entities/base.entity';
-import { BaseRepositoryAbstract } from 'src/common/repositories/base/base.abstract.repository';
 import { IBaseRepository } from 'src/common/repositories/base/base.interface.repository';
 
 import { IBaseService } from './base.interface.service';
@@ -8,7 +7,7 @@ import { IBaseService } from './base.interface.service';
 export abstract class BaseServiceAbstract<T extends BaseEntity>
   implements IBaseService<T>
 {
-  constructor(private readonly repository: BaseRepositoryAbstract<T>) {}
+  constructor(private readonly repository: IBaseRepository<T>) {}
 
   async create(createDto: Partial<T>): Promise<T> {
     return await this.repository.create(createDto as T).catch((err) => {
