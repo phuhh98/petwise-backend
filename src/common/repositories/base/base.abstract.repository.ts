@@ -97,7 +97,7 @@ export abstract class BaseRepositoryAbstract<
   }
 
   async create(dto: T): Promise<T> {
-    const docRef = await this.collection.add(dto);
+    const docRef = await this.collection.add(JSON.parse(JSON.stringify(dto)));
 
     return this.parseIdAndTimeStamp(await docRef.get());
   }
@@ -122,7 +122,7 @@ export abstract class BaseRepositoryAbstract<
         const batch = this.fireStore.batch();
         batchOfItems.forEach(async (item) => {
           const docRef = this.collection.doc();
-          batch.set(docRef, item);
+          batch.set(docRef, JSON.parse(JSON.stringify(item)));
         });
         await batch.commit();
       }),
@@ -216,7 +216,7 @@ export abstract class BaseRepositoryAbstract<
   async update(id: string, dto: Partial<T>): Promise<T> {
     const docRef = this.collection.doc(id);
 
-    await docRef.update(dto);
+    await docRef.update(JSON.parse(JSON.stringify(dto)));
 
     return await this.parseIdAndTimeStamp(await docRef.get());
   }
