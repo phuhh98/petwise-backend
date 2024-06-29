@@ -4,7 +4,8 @@ import { PetCareUploadedDocsRepository } from 'src/common/repositories/petcare-u
 import { PetCareEmbeddingService } from 'src/common/services/petcare-embedding.service';
 import { PetCareUploadedDocsService } from 'src/common/services/petcare-uploaded-docs.service';
 
-import { GooleAIFileServiceWrapper } from './langchain/googleServices/googleFileUpload.service';
+import { GooleFileUploadService } from './googleServices/googleFileUpload.service';
+import { GooleGenAIService } from './googleServices/googleGenAI.service';
 import { LLMController } from './llm.controller';
 import { LLMService } from './llm.service';
 
@@ -12,11 +13,12 @@ import { LLMService } from './llm.service';
   controllers: [LLMController],
   providers: [
     LLMService,
-    GooleAIFileServiceWrapper,
+    GooleFileUploadService,
     PetCareEmbeddingService,
     PetCareUploadedDocsService,
     PetCareEmbeddingRepository,
     PetCareUploadedDocsRepository,
+    GooleGenAIService,
   ],
 })
 export class LLMModule {}

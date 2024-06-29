@@ -4,12 +4,10 @@ import { ConfigService } from '@nestjs/config';
 import { ProviderTokens } from 'src/common/constants/provider-token.constant';
 
 @Injectable()
-export class GooleAIFileServiceWrapper {
+export class GooleFileUploadService {
+  private _fileManager: GoogleAIFileManager;
   @Inject(ProviderTokens['CONFIG_SERVICE'])
   private readonly configService: ConfigService<NodeJS.ProcessEnv>;
-
-  private fileManagerSingleton: GoogleAIFileManager;
-
   public async deleteFile(fileId: string) {
     return await this.fileManager.deleteFile(fileId);
   }
@@ -36,13 +34,12 @@ export class GooleAIFileServiceWrapper {
     });
   }
 
-  get fileManager() {
-    if (!this.fileManagerSingleton) {
-      this.fileManagerSingleton = new GoogleAIFileManager(
-        this.configService.get('GEMINI_API_KEY'),
-      );
-    }
-
-    return this.fileManagerSingleton;
+  get fileManager(): GoogleAIFileManager {
+    return this._fileManager
+      ? this._fileManager
+      : ((this._fileManager = new GoogleAIFileManager(
+          this.configService.get('GEMINI_API_KEY'),
+        )),
+        this._fileManager);
   }
 }

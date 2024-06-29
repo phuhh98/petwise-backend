@@ -44,7 +44,7 @@ import {
   TravelAssitantQueryDto,
 } from './dtos/request.dto';
 import { TravelAssisstantResDto } from './dtos/response.dto';
-import { GooleAIFileServiceWrapper } from './langchain/googleServices/googleFileUpload.service';
+import { GooleFileUploadService } from './googleServices/googleFileUpload.service';
 import { LLMService } from './llm.service';
 
 const CONTROLLER_ROUTE_PATH = 'llm';
@@ -68,7 +68,7 @@ enum ROUTES {
 export class LLMController {
   constructor(
     private readonly llmService: LLMService,
-    private readonly googleFileService: GooleAIFileServiceWrapper,
+    private readonly googleFileService: GooleFileUploadService,
     private readonly i18n: I18nService<I18nTranslations>,
     private readonly petCareEmbeddingService: PetCareEmbeddingService,
     private readonly petCareUploadedDocsService: PetCareUploadedDocsService,
