@@ -1,6 +1,7 @@
 import { Global, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_INTERCEPTOR } from '@nestjs/core';
+import { MongooseModule } from '@nestjs/mongoose';
 import Joi from 'joi';
 import { AcceptLanguageResolver, I18nModule, QueryResolver } from 'nestjs-i18n';
 import path from 'node:path';
@@ -62,6 +63,9 @@ import { PetModule } from './modules/pet/pet.module';
         __dirname,
         '../src/generated/i18n.generated.ts',
       ),
+    }),
+    MongooseModule.forRoot(process.env.MONGODB_URL, {
+      dbName: process.env.MONGODB_DB_NAME,
     }),
     LLMModule,
     PetModule,

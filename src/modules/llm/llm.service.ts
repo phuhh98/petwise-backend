@@ -1,9 +1,7 @@
 import { TaskType } from '@google/generative-ai';
 import { StringOutputParser } from '@langchain/core/output_parsers';
 import { RunnableMap } from '@langchain/core/runnables';
-import { Inject, Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { ProviderTokens } from 'src/common/constants/provider-token.constant';
+import { Injectable } from '@nestjs/common';
 import {
   petDiaryBuilderHumanMessage,
   petDiaryBuilderPrompt,
@@ -30,18 +28,11 @@ import { travelAssistantPrompt } from './prompts/travelAssistantSystemPrompt';
  */
 @Injectable()
 export class LLMService {
-  @Inject(ProviderTokens['CONFIG_SERVICE'])
-  private readonly configService: ConfigService<NodeJS.ProcessEnv>;
-
   constructor(private readonly googleGenAIService: GooleGenAIService) {}
 
   async embeddingText(chunk: string, subject: string) {
     return await this.googleGenAIService
-      .getEmbeddingModel(
-        subject,
-        TaskType.RETRIEVAL_DOCUMENT,
-        'text-embedding-004',
-      )
+      .getEmbeddingModel(TaskType.RETRIEVAL_DOCUMENT, 'embedding-001', subject)
       .embedQuery(chunk);
   }
 

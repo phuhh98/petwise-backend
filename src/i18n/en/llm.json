@@ -11,5 +11,6 @@
   "generationSuccess": "Generate content successfully",
 
   "petCareDocsDuplicate": "File {file_name} already uploaded",
-  "petCareDocsUploadComplete": "File(s) has been uploaded successfully"
+  "petCareDocsUploadComplete": "File(s) has been uploaded successfully",
+  "petCareDocsUploadInternalError": "Error while processing your file(s)"
 }

@@ -1,7 +1,6 @@
 import { FileState } from '@google/generative-ai/server';
 import { PDFLoader } from '@langchain/community/document_loaders/fs/pdf';
 import {
-  BadRequestException,
   Body,
   Controller,
   FileTypeValidator,
@@ -19,22 +18,20 @@ import {
 } from '@nestjs/common';
 import { AnyFilesInterceptor, FileInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
-import { FieldValue } from 'firebase-admin/firestore';
-import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
 import _ from 'lodash';
 import { I18nService } from 'nestjs-i18n';
+import { Blob } from 'node:buffer';
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
-import { MAX_BATCH_SIZE } from 'src/common/constants/firebase.constant';
 import { REGEX_PATTERN } from 'src/common/constants/regex.constant';
 import { ApiAppSuccessResponse } from 'src/common/decorators/swagger/generic-response.decorator';
-import { FileUploadDtoSwagger } from 'src/common/dtos/common-request.dto';
+import {
+  EmptyDto,
+  FileUploadDtoSwagger,
+} from 'src/common/dtos/common-request.dto';
 import { DiaryNS } from 'src/common/entities/diary.entity';
 import { PetProfileNS } from 'src/common/entities/pet.entity';
 import { FirebaseAuthenticationGuard } from 'src/common/guards/firebase-authentication.guard';
-import { PetCareEmbeddingService } from 'src/common/services/petcare-embedding.service';
-import { PetCareUploadedDocsService } from 'src/common/services/petcare-uploaded-docs.service';
-import { createSHA256 } from 'src/common/utils/converter';
 import { I18nTranslations } from 'src/generated/i18n.generated';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -46,6 +43,7 @@ import {
 import { TravelAssisstantResDto } from './dtos/response.dto';
 import { GooleFileUploadService } from './googleServices/googleFileUpload.service';
 import { LLMService } from './llm.service';
+import { PetcareDocsStore } from './vectorstores/petcareDocs.store';
 
 const CONTROLLER_ROUTE_PATH = 'llm';
 
@@ -70,14 +68,13 @@ export class LLMController {
     private readonly llmService: LLMService,
     private readonly googleFileService: GooleFileUploadService,
     private readonly i18n: I18nService<I18nTranslations>,
-    private readonly petCareEmbeddingService: PetCareEmbeddingService,
-    private readonly petCareUploadedDocsService: PetCareUploadedDocsService,
+    private readonly petCareDocsStore: PetcareDocsStore,
   ) {}
 
   @Post(ROUTES.PETCARE_DOCUMENT_UPLOAD)
   @HttpCode(HttpStatus.OK)
   @UseInterceptors(AnyFilesInterceptor())
-  // @ApiAppSuccessResponse()
+  @ApiAppSuccessResponse(EmptyDto)
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     description: 'Unstructure data about petcare',
@@ -103,137 +100,33 @@ export class LLMController {
     @Body()
     body: EmbeddingUploadBodyDto,
   ) {
-    /**
-     * File temporary store is out side of try block
-     */
-    const TEMP_FILE_PROPS: {
-      fileName: string;
-      filePath: string;
-      originalname: string;
-      sha256: string;
-    }[] = [];
-    await Promise.all(
-      files.map(async (file) => {
-        const tempFileName = `${uuidv4()}`;
-        const tempFilePath = path.resolve(__dirname, tempFileName);
-        await fs.writeFile(tempFilePath, file.buffer).catch((_) => {
-          throw new InternalServerErrorException(
-            this.i18n.t('app.preUploadError'),
-          );
-        });
-
-        TEMP_FILE_PROPS.push({
-          fileName: tempFileName,
-          filePath: tempFilePath,
-          originalname: file.originalname,
-          sha256: '',
-        });
-      }),
-    );
-
     const UPLOADING_SUBJECT = body.subject;
 
     try {
-      /**
-       * Step 1: create SHA for each temporary document and try to find it in petCareUploadedDocsRepository
-       * if exist, fire a UnprocessableEntity with already uploaded file in the payload with the file name
-       * else, create record to track all the uploaded files
-       */
-
-      await Promise.all(
-        TEMP_FILE_PROPS.map(async (fileProps, index) => {
-          const fileSHA256 = createSHA256(
-            await fs.readFile(fileProps.filePath),
-          );
-          const existDocs = await this.petCareUploadedDocsService.findAll([
-            { fieldPath: 'sha256_hash', opStr: '==', value: fileSHA256 },
-          ]);
-          if (existDocs.count > 0) {
-            throw new BadRequestException(
-              this.i18n.t('llm.petCareDocsDuplicate', {
-                args: { file_name: fileProps.originalname },
-              }),
-            );
-          } else {
-            TEMP_FILE_PROPS.splice(index, 1, {
-              ...fileProps,
-              sha256: fileSHA256,
-            });
-          }
-        }),
-      );
-
-      /**
-       * Step 2: split documents into chunks
-       */
-      const splitter = new RecursiveCharacterTextSplitter({
-        /**
-         * TODO: Adjust these value to get better result in relevant search
-         */
-        chunkOverlap: 1200,
-        chunkSize: 3000,
-      });
-
       await Promise.all(
         /**
          * Process file one by one
          */
-        TEMP_FILE_PROPS.map(async (tempFileProps) => {
-          const fileDataLoader = new PDFLoader(tempFileProps.filePath, {
+        files.map(async (file) => {
+          const fileDataLoader = new PDFLoader(new Blob([file.buffer]), {
             parsedItemSeparator: '',
             splitPages: false,
           });
 
           const documents = await fileDataLoader.load();
-
-          const docChunks = await splitter.splitDocuments(documents);
-          const docChunkBatches = _.chunk(docChunks, MAX_BATCH_SIZE);
-
-          /**
-           * Step 3: call model to turn to vector and store results
-           */
-          await Promise.all(
-            docChunkBatches.map(async (chunkBatch) => {
-              const embeddingBatch = await Promise.all(
-                chunkBatch.map(async (splittedDocument) => {
-                  return {
-                    chunk: splittedDocument.pageContent,
-                    embedding: FieldValue.vector(
-                      await this.llmService.embeddingText(
-                        splittedDocument.pageContent,
-                        UPLOADING_SUBJECT,
-                      ),
-                    ) as unknown as number[],
-                  };
-                }),
-              );
-
-              await this.petCareEmbeddingService.createMany(embeddingBatch);
-            }),
+          await this.petCareDocsStore.addDocuments(
+            UPLOADING_SUBJECT,
+            documents,
           );
-
-          await this.petCareUploadedDocsService.create({
-            metadata: {
-              original_file_name: tempFileProps.originalname,
-              subject: UPLOADING_SUBJECT,
-            },
-            sha256_hash: tempFileProps.sha256,
-          });
         }),
       );
 
       return {
         message: this.i18n.t('llm.petCareDocsUploadComplete'),
       };
-    } finally {
-      await Promise.all(
-        TEMP_FILE_PROPS.map(async (tempFileProps) => {
-          await fs.rm(tempFileProps.filePath).catch((_) => {
-            throw new InternalServerErrorException(
-              this.i18n.t('app.clearResourceError'),
-            );
-          });
-        }),
+    } catch (_) {
+      throw new InternalServerErrorException(
+        this.i18n.t('llm.petCareDocsUploadInternalError'),
       );
     }
   }
@@ -461,6 +354,29 @@ export class LLMController {
       return { data: promptRes, message: this.i18n.t('llm.generationSuccess') };
     } finally {
       await fs.rm(TEMP_FILE_PATH);
+    }
+  }
+
+  @Post('search')
+  @HttpCode(HttpStatus.OK)
+  async testSearch(
+    @Body()
+    body: EmbeddingUploadBodyDto,
+  ) {
+    const searchTerm = body.subject;
+
+    try {
+      return {
+        data: {
+          search: await (
+            await this.petCareDocsStore.getRetriever('')
+          ).invoke(searchTerm),
+        },
+      };
+    } catch (_) {
+      throw new InternalServerErrorException(
+        this.i18n.t('llm.petCareDocsUploadInternalError'),
+      );
     }
   }
 

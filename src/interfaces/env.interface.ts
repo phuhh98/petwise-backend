@@ -13,6 +13,9 @@ declare global {
       FIREBASE_STORAGE_BUCKET: string;
       GEMINI_API_KEY: string;
 
+      MONGODB_DB_NAME: string;
+
+      MONGODB_URL: string;
       PORT: number;
     }
   }

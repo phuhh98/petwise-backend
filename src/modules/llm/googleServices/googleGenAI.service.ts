@@ -54,9 +54,9 @@ export class GooleGenAIService {
   }
 
   public getEmbeddingModel(
-    chunk_title: string,
     taskType: TaskType,
     modelName: EmbeddingModels = EmbeddingModelsEnum['embedding-001'],
+    chunk_title?: string,
   ): GoogleGenerativeAIEmbeddings {
     return this._embeddingModels[modelName]
       ? this._embeddingModels[modelName]
@@ -67,7 +67,7 @@ export class GooleGenAIService {
             ),
           model: 'embedding-001',
           taskType,
-          title: chunk_title,
+          ...(chunk_title ? { title: chunk_title } : {}),
         })),
         this._embeddingModels[modelName]);
   }

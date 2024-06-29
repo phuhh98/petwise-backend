@@ -40,6 +40,7 @@ export type I18nTranslations = {
         "generationSuccess": string;
         "petCareDocsDuplicate": string;
         "petCareDocsUploadComplete": string;
+        "petCareDocsUploadInternalError": string;
     };
     "operation": {
         "create": string;
