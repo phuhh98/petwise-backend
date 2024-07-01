@@ -18,6 +18,11 @@ import {
   geoLocationOutputParser,
   geolocationPrompt,
 } from './prompts/geolocationSystemPrompt';
+import {
+  receiptExtractorMediaMessage,
+  receiptExtractorParser,
+  receiptExtractorPrompt,
+} from './prompts/receiptExtractorPrompt';
 import { travelAssistantPrompt } from './prompts/travelAssistantSystemPrompt';
 
 /**
@@ -93,6 +98,22 @@ export class LLMService {
     return await petProfileBuilderChain.invoke({
       format_instructions: petProfileOutputParser.getFormatInstructions(),
       message: petProfilebuilderHumanMessage({ fileUri, mimeType }),
+    });
+  }
+
+  async receiptExtractor(
+    filesMeta: {
+      fileUri: string;
+      mimeType: string;
+    }[],
+  ) {
+    const receiptExtractorChain = receiptExtractorPrompt
+      .pipe(this.googleGenAIService.getChatModel())
+      .pipe(receiptExtractorParser);
+
+    return await receiptExtractorChain.invoke({
+      format_instructions: receiptExtractorParser.getFormatInstructions(),
+      mediaMessage: receiptExtractorMediaMessage(filesMeta),
     });
   }
 }

@@ -1,4 +1,4 @@
-import { FileState } from '@google/generative-ai/server';
+import { FileState, UploadFileResponse } from '@google/generative-ai/server';
 import { PDFLoader } from '@langchain/community/document_loaders/fs/pdf';
 import {
   Body,
@@ -40,7 +40,10 @@ import {
   EmbeddingUploadBodyDto,
   TravelAssitantQueryDto,
 } from './dtos/request.dto';
-import { TravelAssisstantResDto } from './dtos/response.dto';
+import {
+  ReceiptExtractorRes,
+  TravelAssisstantResDto,
+} from './dtos/response.dto';
 import { GooleFileUploadService } from './googleServices/googleFileUpload.service';
 import { LLMService } from './llm.service';
 import { PetcareDocsStore } from './vectorstores/petcareDocs.store';
@@ -56,6 +59,7 @@ enum ROUTES {
   PET_DIARY_BUILDER = 'pet-diary-builder',
   PET_PROFILE_BUILDER = 'pet-profile-builder',
   PETCARE_DOCUMENT_UPLOAD = 'petcare-documents',
+  RECEIPT_EXTRACTOR = 'receipt-extractor',
   TRAVEL_ASSISTANT = 'travel-assistant',
 }
 
@@ -354,6 +358,160 @@ export class LLMController {
       return { data: promptRes, message: this.i18n.t('llm.generationSuccess') };
     } finally {
       await fs.rm(TEMP_FILE_PATH);
+    }
+  }
+
+  @Post(ROUTES.RECEIPT_EXTRACTOR)
+  @HttpCode(HttpStatus.OK)
+  @UseInterceptors(AnyFilesInterceptor())
+  @ApiAppSuccessResponse(ReceiptExtractorRes)
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    description: 'Multiple images of a receipt',
+    type: EmbeddingMultiFileUploadDtoSwagger,
+  })
+  async receiptExtractor(
+    @UploadedFiles(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({
+            /**
+             * 10MB in bytes
+             */
+            maxSize: 10 * 1024 * 1024,
+          }),
+          new FileTypeValidator({
+            fileType: REGEX_PATTERN.GOOGLE_API_SUPPORT_IMAGE_MIMETYPE,
+          }),
+        ],
+      }),
+    )
+    files: Array<Express.Multer.File>,
+  ) {
+    const TEMP_FILES: ({
+      temp_file_name: string;
+      temp_file_path: string;
+    } & Express.Multer.File)[] = [];
+    /**
+     * File temporary store is out side of try block
+     */
+    await Promise.all(
+      files.map(async (file) => {
+        const TEMP_FILE_NAME = `${uuidv4()}`;
+        const TEMP_FILE_PATH = path.resolve(__dirname, TEMP_FILE_NAME);
+        await fs.writeFile(TEMP_FILE_PATH, file.buffer).catch((_) => {
+          throw new InternalServerErrorException(
+            this.i18n.t('app.preUploadError'),
+          );
+        });
+
+        TEMP_FILES.push({
+          ...file,
+          temp_file_name: TEMP_FILE_NAME,
+          temp_file_path: TEMP_FILE_PATH,
+        });
+      }),
+    );
+
+    try {
+      const FILE_UPLOAD_RESULTS: ({
+        mimeType: string;
+      } & UploadFileResponse['file'])[] = [];
+
+      await Promise.all(
+        TEMP_FILES.map(async (file) => {
+          const fileUploadResult = await this.googleFileService
+            .uploadFile({
+              displayName: file.originalname,
+              filePath: file.temp_file_path,
+              mimeType: file.mimetype,
+              name: file.temp_file_name,
+            })
+            .catch((_) => {
+              throw new InternalServerErrorException(
+                this.i18n.t('llm.videoUploadingFailed'),
+              );
+            });
+          /**
+           * Now have to check for file state
+           * Possible file states are in the below url
+           * https://ai.google.dev/api/rest/v1beta/files#state
+           */
+
+          let fileMeta = await this.googleFileService
+            .getFileMeta(fileUploadResult.file.name)
+            .catch((_) => {
+              throw new InternalServerErrorException(
+                this.i18n.t('llm.videoMetadataFailed'),
+              );
+            });
+
+          while (fileMeta.state === FileState.PROCESSING) {
+            process.stdout.write('.');
+            // Sleep for 1 seconds
+            await new Promise((resolve) => setTimeout(resolve, 1_000));
+            // Fetch the file from the API again
+            fileMeta = await this.googleFileService
+              .getFileMeta(fileUploadResult.file.name)
+              .catch((_) => {
+                throw new InternalServerErrorException(
+                  this.i18n.t('llm.videoMetadataFailed'),
+                );
+              });
+          }
+
+          if (fileMeta.state === FileState.FAILED) {
+            throw new UnprocessableEntityException(
+              this.i18n.t('llm.videoProcessingFailed'),
+            );
+          }
+
+          FILE_UPLOAD_RESULTS.push({
+            ...fileUploadResult.file,
+            mimeType: file.mimetype,
+          });
+        }),
+      );
+
+      const promptRes = await this.llmService
+        .receiptExtractor(
+          FILE_UPLOAD_RESULTS.map((fileUploadResult) => ({
+            fileUri: fileUploadResult.uri,
+            mimeType: fileUploadResult.mimeType,
+          })),
+        )
+        .catch((_) => {
+          throw new InternalServerErrorException(
+            this.i18n.t('llm.generationError'),
+          );
+        });
+
+      await Promise.all(
+        FILE_UPLOAD_RESULTS.map(async (fileUploadResult) => {
+          await this.googleFileService
+            .deleteFile(fileUploadResult.name)
+            .catch((_) => {
+              throw new InternalServerErrorException(
+                this.i18n.t('app.clearResourceError'),
+              );
+            });
+        }),
+      );
+
+      return {
+        data: { receipt: promptRes },
+        message: this.i18n.t('llm.generationSuccess'),
+      };
+    } finally {
+      await Promise.all(
+        TEMP_FILES.map(async (fileProps) => {
+          await fs.rm(fileProps.temp_file_path).catch((_) => {
+            throw new InternalServerErrorException(
+              this.i18n.t('app.clearResourceError'),
+            );
+          });
+        }),
+      );
     }
   }
 
