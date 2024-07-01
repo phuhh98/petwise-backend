@@ -19,6 +19,26 @@ import {
   geolocationPrompt,
 } from './prompts/geolocationSystemPrompt';
 import { travelAssistantPrompt } from './prompts/travelAssistantSystemPrompt';
+import {
+  receiptExtractorMediaMessage,
+  receiptExtractorParser,
+  receiptExtractorPrompt,
+} from './prompts/receiptExtractorPrompt';
+import {
+  createToolCallingAgent,
+  AgentExecutor,
+  AgentStep,
+  AgentFinish,
+} from 'langchain/agents';
+import { receiptExtractorValidation } from './tools/receiptExtractorValidation.tool';
+import { tool, StructuredToolInterface } from '@langchain/core/tools';
+import { RunnableSequence } from '@langchain/core/runnables';
+import {
+  HumanMessage,
+  BaseMessage,
+  FunctionMessage,
+  AIMessage,
+} from '@langchain/core/messages';
 
 /**
  * TODO: Split model to another class which expose method to get preconfigure model with extra params
@@ -93,6 +113,79 @@ export class LLMService {
     return await petProfileBuilderChain.invoke({
       format_instructions: petProfileOutputParser.getFormatInstructions(),
       message: petProfilebuilderHumanMessage({ fileUri, mimeType }),
+    });
+  }
+
+  async receiptExtractor(
+    filesMeta: {
+      fileUri: string;
+      mimeType: string;
+    }[],
+  ) {
+    const formatAgentSteps = (steps: AgentStep[]): BaseMessage[] =>
+      steps.flatMap(({ action, observation }) => {
+        if ('messageLog' in action && action.messageLog !== undefined) {
+          const log = action.messageLog as BaseMessage[];
+          return log.concat(new FunctionMessage(observation, action.tool));
+        } else {
+          return [new AIMessage(action.log)];
+        }
+      });
+
+    const llmWithTools = this.googleGenAIService
+      .getChatModel()
+      .bindTools([receiptExtractorValidation]);
+
+    const runnableAgent = RunnableSequence.from<{
+      format_instructions: string;
+      mediaMessage: HumanMessage;
+      steps: Array<AgentStep>;
+    }>([
+      {
+        format_instructions: (i) => i.format_instructions,
+        mediaMessage: (i) => i.mediaMessage,
+        agent_scratchpad: (i) => formatAgentSteps(i.steps),
+      },
+      receiptExtractorPrompt,
+      llmWithTools,
+      receiptExtractorParser,
+    ]);
+
+    // const agent = await createToolCallingAgent({
+    //   llm: this.googleGenAIService.getChatModel(),
+    //   tools: [
+    //     receiptExtractorValidation as unknown as StructuredToolInterface<any>,
+    //   ],
+    //   prompt: receiptExtractorPrompt,
+
+    // });
+
+    // const agentExecutor = new AgentExecutor({
+    //   agent,
+    //   tools: [
+    //     receiptExtractorValidation as unknown as StructuredToolInterface<any>,
+    //   ],
+    // });
+
+    const executor = AgentExecutor.fromAgentAndTools({
+      agent: runnableAgent,
+      tools: [
+        receiptExtractorValidation as unknown as StructuredToolInterface<any>,
+      ],
+    });
+
+    // const receiptExtractorChain = receiptExtractorPrompt
+    //   .pipe(this.googleGenAIService.getChatModel())
+    //   .pipe(receiptExtractorParser);
+
+    // return await receiptExtractorChain.invoke({
+    //   format_instructions: receiptExtractorParser.getFormatInstructions(),
+    //   mediaMessage: receiptExtractorMediaMessage(filesMeta),
+    // });
+
+    return executor.invoke({
+      format_instructions: receiptExtractorParser.getFormatInstructions(),
+      mediaMessage: receiptExtractorMediaMessage(filesMeta),
     });
   }
 }

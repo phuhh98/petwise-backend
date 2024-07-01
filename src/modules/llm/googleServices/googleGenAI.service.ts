@@ -38,6 +38,7 @@ export class GooleGenAIService {
   public getChatModel(
     modelName: GenModels = GenModelsEnum['gemini-1.5-flash'],
     maxOutputTokens: number = 2000,
+    temperature: number = 0,
   ): ChatGoogleGenerativeAI {
     return this._chatModels[modelName]
       ? this._chatModels[modelName]
@@ -48,7 +49,8 @@ export class GooleGenAIService {
             ),
           maxOutputTokens: maxOutputTokens,
           model: modelName,
-          // verbose: true,
+          verbose: true,
+          temperature,
         })),
         this._chatModels[modelName]);
   }
