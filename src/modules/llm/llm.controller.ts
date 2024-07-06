@@ -66,7 +66,7 @@ enum ROUTES {
 @ApiTags(CONTROLLER_ROUTE_PATH)
 @ApiBearerAuth()
 @Controller(CONTROLLER_ROUTE_PATH)
-// @UseGuards(FirebaseAuthenticationGuard)
+@UseGuards(FirebaseAuthenticationGuard)
 export class LLMController {
   constructor(
     private readonly llmService: LLMService,
@@ -75,7 +75,6 @@ export class LLMController {
     private readonly petCareDocsStore: PetcareDocsStore,
   ) {}
 
-  @UseGuards(FirebaseAuthenticationGuard)
   @Post(ROUTES.PETCARE_DOCUMENT_UPLOAD)
   @HttpCode(HttpStatus.OK)
   @UseInterceptors(AnyFilesInterceptor())
@@ -136,7 +135,6 @@ export class LLMController {
     }
   }
 
-  @UseGuards(FirebaseAuthenticationGuard)
   @Post(ROUTES.PET_DIARY_BUILDER)
   @HttpCode(HttpStatus.OK)
   @UseInterceptors(FileInterceptor(REQUEST_PARAM.FILE_FIELD_NAME))
@@ -256,7 +254,6 @@ export class LLMController {
     }
   }
 
-  @UseGuards(FirebaseAuthenticationGuard)
   @Post(ROUTES.PET_PROFILE_BUILDER)
   @HttpCode(HttpStatus.OK)
   @UseInterceptors(FileInterceptor(REQUEST_PARAM.FILE_FIELD_NAME))
@@ -518,7 +515,6 @@ export class LLMController {
     }
   }
 
-  @UseGuards(FirebaseAuthenticationGuard)
   @Post('search')
   @HttpCode(HttpStatus.OK)
   async testSearch(
@@ -542,7 +538,6 @@ export class LLMController {
     }
   }
 
-  @UseGuards(FirebaseAuthenticationGuard)
   @Post(ROUTES.TRAVEL_ASSISTANT)
   @HttpCode(HttpStatus.OK)
   @ApiAppSuccessResponse(TravelAssisstantResDto)
