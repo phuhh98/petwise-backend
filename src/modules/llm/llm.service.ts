@@ -37,7 +37,11 @@ export class LLMService {
 
   async embeddingText(chunk: string, subject: string) {
     return await this.googleGenAIService
-      .getEmbeddingModel(TaskType.RETRIEVAL_DOCUMENT, 'embedding-001', subject)
+      .getEmbeddingModel(
+        TaskType.RETRIEVAL_DOCUMENT,
+        'text-embedding-004',
+        subject,
+      )
       .embedQuery(chunk);
   }
 

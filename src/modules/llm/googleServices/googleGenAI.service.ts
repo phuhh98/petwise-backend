@@ -36,7 +36,7 @@ export class GooleGenAIService {
   private readonly configService: ConfigService<NodeJS.ProcessEnv>;
 
   public getChatModel(
-    modelName: GenModels = GenModelsEnum['gemini-1.5-flash'],
+    modelName: GenModels = GenModelsEnum['gemini-1.5-pro'],
     maxOutputTokens: number = 2000,
     temperature: number = 0,
   ): ChatGoogleGenerativeAI {
@@ -57,7 +57,7 @@ export class GooleGenAIService {
 
   public getEmbeddingModel(
     taskType: TaskType,
-    modelName: EmbeddingModels = EmbeddingModelsEnum['embedding-001'],
+    modelName: EmbeddingModels = EmbeddingModelsEnum['text-embedding-004'],
     chunk_title?: string,
   ): GoogleGenerativeAIEmbeddings {
     return this._embeddingModels[modelName]
